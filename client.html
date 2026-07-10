@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevKonek — My Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="index.html" class="logo">Dev<span>Konek</span></a>
+      <nav>
+        <span id="welcome" style="font-size:14px;color:var(--muted)"></span>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container" style="padding-top:20px">
+    <div class="tabs">
+      <button class="tab active" data-tab="post">Post a Project</button>
+      <button class="tab" data-tab="projects">My Projects</button>
+    </div>
+
+    <!-- POST A PROJECT -->
+    <div id="tab-post">
+      <div class="card">
+        <h2>What do you need built?</h2>
+        <form id="post-form">
+          <label>Project Title</label>
+          <input type="text" id="p-title" required placeholder="e.g. Online store for my sari-sari business">
+
+          <div class="form-row">
+            <div>
+              <label>Type</label>
+              <select id="p-type">
+                <option value="website">Website</option>
+                <option value="mobile_app">Mobile App</option>
+                <option value="both">Website + Mobile App</option>
+              </select>
+            </div>
+            <div>
+              <label>Category</label>
+              <select id="p-category"></select>
+            </div>
+          </div>
+
+          <label>Budget (price guide — pick the closest, or set your own)</label>
+          <select id="p-budget-preset"></select>
+          <div class="form-row" style="margin-top:8px">
+            <div>
+              <label style="margin-top:0">Budget Min (₱)</label>
+              <input type="number" id="p-budget-min" min="0" required>
+            </div>
+            <div>
+              <label style="margin-top:0">Budget Max (₱)</label>
+              <input type="number" id="p-budget-max" min="0" required>
+            </div>
+          </div>
+
+          <label>Timeline</label>
+          <select id="p-timeline">
+            <option>ASAP (within 2 weeks)</option>
+            <option>Within 1 month</option>
+            <option>1-3 months</option>
+            <option>Flexible</option>
+          </select>
+
+          <label>Details (describe what you want — features, pages, design pegs, etc.)</label>
+          <textarea id="p-details" required placeholder="e.g. I want customers to browse my products, add to cart, and pay via GCash..."></textarea>
+
+          <div class="error-msg" id="post-error"></div>
+          <button type="submit" class="btn btn-primary" style="margin-top:10px">Post Project</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MY PROJECTS -->
+    <div id="tab-projects" style="display:none">
+      <div id="projects-list"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    let me = null;
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('tab-post').style.display = t.dataset.tab === 'post' ? 'block' : 'none';
+      document.getElementById('tab-projects').style.display = t.dataset.tab === 'projects' ? 'block' : 'none';
+      if (t.dataset.tab === 'projects') loadProjects();
+    }));
+
+    // Populate selects with DOM API
+    const catSel = document.getElementById('p-category');
+    CATEGORIES.forEach(c => catSel.appendChild(new Option(c, c)));
+
+    const presetSel = document.getElementById('p-budget-preset');
+    BUDGET_PRESETS.forEach((p, i) => presetSel.appendChild(new Option(p.label, i)));
+    presetSel.addEventListener('change', () => {
+      const p = BUDGET_PRESETS[presetSel.value];
+      if (p.min > 0) {
+        document.getElementById('p-budget-min').value = p.min;
+        document.getElementById('p-budget-max').value = p.max;
+      }
+    });
+    presetSel.dispatchEvent(new Event('change'));
+
+    document.getElementById('post-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('post-error');
+      errEl.textContent = '';
+      const min = Number(document.getElementById('p-budget-min').value);
+      const max = Number(document.getElementById('p-budget-max').value);
+      if (max < min) { errEl.textContent = 'Budget max must be greater than or equal to min.'; return; }
+
+      const { error } = await db.from('projects').insert({
+        client_id: me.user.id,
+        title: document.getElementById('p-title').value.trim(),
+        project_type: document.getElementById('p-type').value,
+        category: catSel.value,
+        budget_min: min,
+        budget_max: max,
+        timeline: document.getElementById('p-timeline').value,
+        details: document.getElementById('p-details').value.trim()
+      });
+      if (error) { errEl.textContent = error.message; return; }
+      e.target.reset();
+      presetSel.dispatchEvent(new Event('change'));
+      document.querySelector('[data-tab="projects"]').click();
+    });
+
+    async function loadProjects() {
+      const listEl = document.getElementById('projects-list');
+      listEl.innerHTML = '<div class="empty-state">Loading...</div>';
+
+      const { data: projects, error } = await db.from('projects')
+        .select('*, offers(*, profiles:developer_id(full_name, skills, contact, bio))')
+        .eq('client_id', me.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) { listEl.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
+      if (!projects.length) {
+        listEl.innerHTML = '<div class="empty-state">No projects yet. Post your first project!</div>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      projects.forEach(proj => {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const offers = proj.offers || [];
+        const pending = offers.filter(o => o.status === 'pending');
+        const accepted = offers.find(o => o.status === 'accepted');
+
+        let offersHtml = '';
+        if (accepted) {
+          const dev = accepted.profiles || {};
+          offersHtml =
+            '<div class="contact-box"><strong>✅ Matched with ' + escapeHtml(dev.full_name) + '</strong> — ' +
+            peso(accepted.price) + '<br>Contact: <strong>' + escapeHtml(dev.contact) + '</strong><br>' +
+            'Skills: ' + (dev.skills || []).map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') +
+            '</div>';
+          if (proj.status === 'in_progress') {
+            offersHtml += '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="completeProject(\'' + proj.id + '\')">Mark as Completed</button>';
+          }
+        } else if (pending.length) {
+          offersHtml = '<h3 style="margin-top:14px">Offers (' + pending.length + ')</h3>';
+          pending.forEach(o => {
+            const dev = o.profiles || {};
+            offersHtml +=
+              '<div class="item-row"><div>' +
+              '<strong>' + escapeHtml(dev.full_name) + '</strong><br>' +
+              (dev.skills || []).map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') +
+              '<div class="item-meta">' + escapeHtml(o.message) + '</div>' +
+              '</div><div style="text-align:right">' +
+              '<div class="price-tag">' + peso(o.price) + '</div>' +
+              '<button class="btn btn-primary btn-sm" style="margin-top:6px" onclick="acceptOffer(\'' + proj.id + '\',\'' + o.id + '\')">Accept</button> ' +
+              '<button class="btn btn-outline btn-sm" style="margin-top:6px" onclick="declineOffer(\'' + o.id + '\')">Decline</button>' +
+              '</div></div>';
+          });
+        } else if (proj.status === 'open') {
+          offersHtml = '<div class="item-meta" style="margin-top:10px">No offers yet — developers will see your project in their job search.</div>';
+        }
+
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(proj.title) + '</h3>' + statusBadge(proj.status) + '</div>' +
+          '<div class="item-meta">' + PROJECT_TYPES[proj.project_type] + ' · ' + escapeHtml(proj.category) +
+          ' · Budget: ' + peso(proj.budget_min) + ' - ' + peso(proj.budget_max) +
+          ' · ' + escapeHtml(proj.timeline || '') + ' · Posted ' + fmtDate(proj.created_at) + '</div>' +
+          '<p style="margin-top:8px;font-size:14px">' + escapeHtml(proj.details) + '</p>' +
+          offersHtml;
+
+        listEl.appendChild(card);
+      });
+    }
+
+    async function acceptOffer(projectId, offerId) {
+      // Accept the chosen offer, decline the rest, move project to in_progress
+      const { error: e1 } = await db.from('offers').update({ status: 'accepted' }).eq('id', offerId);
+      if (e1) { alert('Error: ' + e1.message); return; }
+      const { error: e2 } = await db.from('offers').update({ status: 'declined' })
+        .eq('project_id', projectId).neq('id', offerId).eq('status', 'pending');
+      if (e2) { alert('Error: ' + e2.message); return; }
+      const { error: e3 } = await db.from('projects').update({ status: 'in_progress' }).eq('id', projectId);
+      if (e3) { alert('Error: ' + e3.message); return; }
+      loadProjects();
+    }
+
+    async function declineOffer(offerId) {
+      const { error } = await db.from('offers').update({ status: 'declined' }).eq('id', offerId);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadProjects();
+    }
+
+    async function completeProject(projectId) {
+      const { error } = await db.from('projects').update({ status: 'completed' }).eq('id', projectId);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadProjects();
+    }
+
+    (async () => {
+      me = await requireAuth('client');
+      if (!me) return;
+      document.getElementById('welcome').textContent =
+        'Hi, ' + me.profile.full_name + (me.profile.business_name ? ' (' + me.profile.business_name + ')' : '');
+    })();
+  </script>
+</body>
+</html>

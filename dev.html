@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevKonek — Developer Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="index.html" class="logo">Dev<span>Konek</span></a>
+      <nav>
+        <span id="welcome" style="font-size:14px;color:var(--muted)"></span>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container" style="padding-top:20px">
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-earnings">₱0</div>
+        <div class="stat-label">Total Earnings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-active">0</div>
+        <div class="stat-label">Active Jobs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-pending">0</div>
+        <div class="stat-label">Pending Offers</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="jobs">Find Jobs</button>
+      <button class="tab" data-tab="offers">My Offers</button>
+      <button class="tab" data-tab="earnings">Earnings</button>
+    </div>
+
+    <div id="tab-jobs">
+      <div class="search-bar">
+        <input type="text" id="job-search" placeholder="Search jobs... (e.g. e-commerce, POS, delivery)">
+        <select id="job-type-filter">
+          <option value="">All Types</option>
+          <option value="website">Website</option>
+          <option value="mobile_app">Mobile App</option>
+          <option value="both">Website + Mobile App</option>
+        </select>
+      </div>
+      <div id="jobs-list"></div>
+    </div>
+
+    <div id="tab-offers" style="display:none">
+      <div id="offers-list"></div>
+    </div>
+
+    <div id="tab-earnings" style="display:none">
+      <div id="earnings-list"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    let me = null;
+    let myOffers = [];
+
+    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      ['jobs', 'offers', 'earnings'].forEach(name => {
+        document.getElementById('tab-' + name).style.display = t.dataset.tab === name ? 'block' : 'none';
+      });
+      if (t.dataset.tab === 'jobs') loadJobs();
+      if (t.dataset.tab === 'offers') loadOffers();
+      if (t.dataset.tab === 'earnings') loadEarnings();
+    }));
+
+    document.getElementById('job-search').addEventListener('input', () => loadJobs());
+    document.getElementById('job-type-filter').addEventListener('change', () => loadJobs());
+
+    async function refreshMyOffers() {
+      const { data } = await db.from('offers')
+        .select('*, projects(id, title, status, project_type, category, client_id, profiles:client_id(full_name, business_name, contact))')
+        .eq('developer_id', me.user.id)
+        .order('created_at', { ascending: false });
+      myOffers = data || [];
+
+      // Stats
+      const completedEarnings = myOffers
+        .filter(o => o.status === 'accepted' && o.projects && o.projects.status === 'completed')
+        .reduce((sum, o) => sum + o.price, 0);
+      const active = myOffers.filter(o => o.status === 'accepted' && o.projects && o.projects.status === 'in_progress').length;
+      const pending = myOffers.filter(o => o.status === 'pending').length;
+      document.getElementById('stat-earnings').textContent = peso(completedEarnings);
+      document.getElementById('stat-active').textContent = active;
+      document.getElementById('stat-pending').textContent = pending;
+    }
+
+    async function loadJobs() {
+      const listEl = document.getElementById('jobs-list');
+      const search = document.getElementById('job-search').value.trim().toLowerCase();
+      const typeFilter = document.getElementById('job-type-filter').value;
+
+      let query = db.from('projects')
+        .select('*, profiles:client_id(full_name, business_name)')
+        .eq('status', 'open')
+        .order('created_at', { ascending: false });
+      if (typeFilter) query = query.eq('project_type', typeFilter);
+
+      const { data: jobs, error } = await query;
+      if (error) { listEl.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
+
+      const filtered = (jobs || []).filter(j => {
+        if (!search) return true;
+        const haystack = (j.title + ' ' + j.category + ' ' + j.details).toLowerCase();
+        return haystack.includes(search);
+      });
+
+      if (!filtered.length) {
+        listEl.innerHTML = '<div class="empty-state">No open jobs found. Check back later!</div>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      const offeredProjectIds = new Set(myOffers.map(o => o.project_id));
+
+      filtered.forEach(job => {
+        const client = job.profiles || {};
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const alreadyOffered = offeredProjectIds.has(job.id);
+        const actionHtml = alreadyOffered
+          ? '<span class="badge badge-pending">Offer already sent</span>'
+          : '<button class="btn btn-accent btn-sm" onclick="toggleOfferForm(\'' + job.id + '\')">Make an Offer</button>' +
+            '<div id="offer-form-' + job.id + '" style="display:none;margin-top:10px">' +
+            '<label style="margin-top:0">Your Price (₱)</label>' +
+            '<input type="number" id="offer-price-' + job.id + '" min="1" placeholder="e.g. 15000">' +
+            '<label>Your Pitch (why should they pick you?)</label>' +
+            '<textarea id="offer-msg-' + job.id + '" placeholder="e.g. I have built 3 e-commerce sites..."></textarea>' +
+            '<button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="sendOffer(\'' + job.id + '\')">Send Offer</button>' +
+            '<div class="error-msg" id="offer-err-' + job.id + '"></div>' +
+            '</div>';
+
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(job.title) + '</h3>' +
+          '<div class="price-tag">' + peso(job.budget_min) + ' - ' + peso(job.budget_max) + '</div></div>' +
+          '<div class="item-meta">' + PROJECT_TYPES[job.project_type] + ' · ' + escapeHtml(job.category) +
+          ' · ' + escapeHtml(job.timeline || '') +
+          ' · by ' + escapeHtml(client.business_name || client.full_name || 'Client') +
+          ' · ' + fmtDate(job.created_at) + '</div>' +
+          '<p style="margin:8px 0;font-size:14px">' + escapeHtml(job.details) + '</p>' +
+          actionHtml;
+
+        listEl.appendChild(card);
+      });
+    }
+
+    function toggleOfferForm(jobId) {
+      const el = document.getElementById('offer-form-' + jobId);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function sendOffer(jobId) {
+      const errEl = document.getElementById('offer-err-' + jobId);
+      errEl.textContent = '';
+      const price = Number(document.getElementById('offer-price-' + jobId).value);
+      const message = document.getElementById('offer-msg-' + jobId).value.trim();
+      if (!price || price < 1) { errEl.textContent = 'Enter a valid price.'; return; }
+      if (!message) { errEl.textContent = 'Write a short pitch.'; return; }
+
+      const { error } = await db.from('offers').insert({
+        project_id: jobId,
+        developer_id: me.user.id,
+        price: price,
+        message: message
+      });
+      if (error) { errEl.textContent = error.message; return; }
+      await refreshMyOffers();
+      loadJobs();
+    }
+
+    async function loadOffers() {
+      await refreshMyOffers();
+      const listEl = document.getElementById('offers-list');
+      if (!myOffers.length) {
+        listEl.innerHTML = '<div class="empty-state">You haven\'t sent any offers yet. Go to Find Jobs!</div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      myOffers.forEach(o => {
+        const proj = o.projects || {};
+        const client = proj.profiles || {};
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        let contactHtml = '';
+        if (o.status === 'accepted') {
+          contactHtml =
+            '<div class="contact-box"><strong>🎉 Accepted!</strong> Client: ' +
+            escapeHtml(client.business_name || client.full_name || '') +
+            '<br>Contact them here: <strong>' + escapeHtml(client.contact || '') + '</strong></div>';
+        }
+
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(proj.title || '(deleted project)') + '</h3>' + statusBadge(o.status) + '</div>' +
+          '<div class="item-meta">Your offer: <strong>' + peso(o.price) + '</strong> · Sent ' + fmtDate(o.created_at) +
+          (proj.status ? ' · Project: ' + statusBadge(proj.status) : '') + '</div>' +
+          '<p style="margin-top:8px;font-size:14px">' + escapeHtml(o.message) + '</p>' +
+          contactHtml;
+
+        listEl.appendChild(card);
+      });
+    }
+
+    async function loadEarnings() {
+      await refreshMyOffers();
+      const listEl = document.getElementById('earnings-list');
+      const earned = myOffers.filter(o => o.status === 'accepted' && o.projects && o.projects.status === 'completed');
+
+      if (!earned.length) {
+        listEl.innerHTML = '<div class="empty-state">No completed projects yet. Earnings show up when a client marks your project as completed.</div>';
+        return;
+      }
+
+      const total = earned.reduce((sum, o) => sum + o.price, 0);
+      listEl.innerHTML = '';
+      const summary = document.createElement('div');
+      summary.className = 'card';
+      summary.innerHTML = '<h2>Total Earned: <span style="color:var(--green)">' + peso(total) + '</span></h2>';
+      listEl.appendChild(summary);
+
+      earned.forEach(o => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">' +
+          '<h3>' + escapeHtml(o.projects.title) + '</h3>' +
+          '<div class="price-tag">' + peso(o.price) + '</div></div>' +
+          '<div class="item-meta">Completed · ' + escapeHtml(o.projects.category || '') + '</div>';
+        listEl.appendChild(card);
+      });
+    }
+
+    (async () => {
+      me = await requireAuth('developer');
+      if (!me) return;
+      document.getElementById('welcome').textContent = 'Hi, ' + me.profile.full_name;
+      await refreshMyOffers();
+      loadJobs();
+    })();
+  </script>
+</body>
+</html>

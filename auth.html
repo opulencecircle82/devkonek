@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevKonek — Log In / Sign Up</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="index.html" class="logo">Dev<span>Konek</span></a>
+    </div>
+  </header>
+
+  <div class="auth-wrap">
+    <div class="card">
+      <div class="tabs">
+        <button class="tab" id="tab-login">Log In</button>
+        <button class="tab" id="tab-signup">Sign Up</button>
+      </div>
+
+      <!-- LOGIN -->
+      <form id="login-form" style="display:none">
+        <label>Email</label>
+        <input type="email" id="login-email" required>
+        <label>Password</label>
+        <input type="password" id="login-password" required>
+        <div class="error-msg" id="login-error"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px">Log In</button>
+      </form>
+
+      <!-- SIGNUP -->
+      <form id="signup-form" style="display:none">
+        <label>I am a...</label>
+        <select id="su-role">
+          <option value="client">Business Owner — I need a website/app</option>
+          <option value="developer">Developer — I build websites/apps</option>
+        </select>
+
+        <label>Full Name</label>
+        <input type="text" id="su-name" required>
+
+        <div id="client-fields">
+          <label>Business Name</label>
+          <input type="text" id="su-business" placeholder="e.g. Aling Nena's Store">
+        </div>
+
+        <div id="dev-fields" style="display:none">
+          <label>Your Skills (check all that apply)</label>
+          <div id="su-skills" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+        </div>
+
+        <label>Contact Info (phone / Messenger / email — shared only after a match)</label>
+        <input type="text" id="su-contact" required placeholder="e.g. 0917xxxxxxx or m.me/yourname">
+
+        <label>Email</label>
+        <input type="email" id="su-email" required>
+        <label>Password (min. 6 characters)</label>
+        <input type="password" id="su-password" minlength="6" required>
+
+        <div class="error-msg" id="signup-error"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
+    const tabLogin = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+
+    function showTab(which) {
+      const isLogin = which === 'login';
+      loginForm.style.display = isLogin ? 'block' : 'none';
+      signupForm.style.display = isLogin ? 'none' : 'block';
+      tabLogin.classList.toggle('active', isLogin);
+      tabSignup.classList.toggle('active', !isLogin);
+    }
+    tabLogin.addEventListener('click', () => showTab('login'));
+    tabSignup.addEventListener('click', () => showTab('signup'));
+    showTab(params.get('mode') === 'signup' ? 'signup' : 'login');
+
+    // Role pre-select from URL + toggle client/dev fields
+    const roleSelect = document.getElementById('su-role');
+    if (params.get('role') === 'developer') roleSelect.value = 'developer';
+    if (params.get('role') === 'client') roleSelect.value = 'client';
+
+    function toggleRoleFields() {
+      const isDev = roleSelect.value === 'developer';
+      document.getElementById('dev-fields').style.display = isDev ? 'block' : 'none';
+      document.getElementById('client-fields').style.display = isDev ? 'none' : 'block';
+    }
+    roleSelect.addEventListener('change', toggleRoleFields);
+    toggleRoleFields();
+
+    // Build skill checkboxes with DOM API (not innerHTML)
+    const skillsWrap = document.getElementById('su-skills');
+    SKILL_OPTIONS.forEach(skill => {
+      const lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;' +
+        'border:1px solid var(--border);border-radius:999px;padding:4px 10px;cursor:pointer;margin:0';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = skill;
+      cb.style.width = 'auto';
+      lbl.appendChild(cb);
+      lbl.appendChild(document.createTextNode(skill));
+      skillsWrap.appendChild(lbl);
+    });
+
+    async function goToDashboard(userId) {
+      const { data: profile } = await db.from('profiles').select('role').eq('id', userId).single();
+      window.location.href = profile && profile.role === 'developer' ? 'dev.html' : 'client.html';
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = '';
+      const { data, error } = await db.auth.signInWithPassword({
+        email: document.getElementById('login-email').value.trim(),
+        password: document.getElementById('login-password').value
+      });
+      if (error) { errEl.textContent = error.message; return; }
+      await goToDashboard(data.user.id);
+    });
+
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('signup-error');
+      errEl.textContent = '';
+
+      const role = roleSelect.value;
+      const skills = Array.from(skillsWrap.querySelectorAll('input:checked')).map(cb => cb.value);
+      if (role === 'developer' && skills.length === 0) {
+        errEl.textContent = 'Please select at least one skill.';
+        return;
+      }
+
+      const { data, error } = await db.auth.signUp({
+        email: document.getElementById('su-email').value.trim(),
+        password: document.getElementById('su-password').value
+      });
+      if (error) { errEl.textContent = error.message; return; }
+      if (!data.session) {
+        errEl.textContent = 'Check your email to confirm your account, then log in.';
+        return;
+      }
+
+      const { error: pErr } = await db.from('profiles').insert({
+        id: data.user.id,
+        role: role,
+        full_name: document.getElementById('su-name').value.trim(),
+        business_name: document.getElementById('su-business').value.trim() || null,
+        skills: skills,
+        contact: document.getElementById('su-contact').value.trim()
+      });
+      if (pErr) { errEl.textContent = 'Profile error: ' + pErr.message; return; }
+
+      window.location.href = role === 'developer' ? 'dev.html' : 'client.html';
+    });
+  </script>
+</body>
+</html>
