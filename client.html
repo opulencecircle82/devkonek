@@ -48,16 +48,11 @@
           </div>
 
           <div class="card" style="background:#f0f9ff;border-color:#bae6fd;margin:12px 0">
-            <button type="button" class="btn btn-outline btn-sm" onclick="toggleEstimator()">📋 Ano ang gusto mong ilagay sa website/app mo?</button>
-            <div id="estimator-box" style="display:none;margin-top:12px">
-              <label style="margin-top:0">I-check ang lahat ng gusto mo</label>
-              <div style="overflow-x:auto">
-                <table id="estimator-features" style="width:100%;border-collapse:collapse;font-size:13px"></table>
-              </div>
-              <label>Iba pa? (optional — isulat sa sarili mong salita, ang developers na ang bahala sa technical details)</label>
-              <input type="text" id="p-others" placeholder="e.g. gusto ko rin ng loyalty points para sa suki">
-              <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="calculateEstimate()">Calculate Estimate</button>
-              <div id="estimator-result" style="display:none;margin-top:10px" class="contact-box"></div>
+            <button type="button" class="btn btn-outline btn-sm" onclick="toggleWants()">+ Add What You Want in Your Website</button>
+            <div id="wants-box" style="display:none;margin-top:12px">
+              <label style="margin-top:0">Type anything you want — any language is fine</label>
+              <textarea id="p-wants" placeholder="e.g. gusto ko po may admin panel, secure yung data, at puwedeng mag-login gamit ang phone number..."></textarea>
+              <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addWants()">Add to Details</button>
             </div>
           </div>
 
@@ -156,101 +151,18 @@
     });
     presetSel.dispatchEvent(new Event('change'));
 
-    // Price estimator — checklist is rebuilt per category, in plain business terms,
-    // shown as a table (checkbox | feature | explanation) so non-technical clients
-    // can scan it like a spreadsheet.
-    const estimatorFeaturesEl = document.getElementById('estimator-features');
-    function renderEstimatorFeatures() {
-      const features = CATEGORY_FEATURES[catSel.value] || CATEGORY_FEATURES['Other'];
-      estimatorFeaturesEl.innerHTML = '';
-
-      const thead = document.createElement('thead');
-      thead.innerHTML =
-        '<tr style="background:#f8fafc;text-align:left">' +
-        '<th style="padding:8px;border-bottom:1px solid var(--border);width:32px"></th>' +
-        '<th style="padding:8px;border-bottom:1px solid var(--border)">Kailangan mo ba ito?</th>' +
-        '<th style="padding:8px;border-bottom:1px solid var(--border)">Ano ito</th>' +
-        '</tr>';
-      estimatorFeaturesEl.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-      features.forEach(f => {
-        const tr = document.createElement('tr');
-        tr.style.cssText = 'border-bottom:1px solid var(--border)';
-
-        const cbTd = document.createElement('td');
-        cbTd.style.cssText = 'padding:8px;vertical-align:top';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.value = f.key;
-        cb.id = 'feat-' + f.key;
-        cb.style.width = 'auto';
-        cbTd.appendChild(cb);
-
-        const labelTd = document.createElement('td');
-        labelTd.style.cssText = 'padding:8px;vertical-align:top;font-weight:600';
-        const labelTag = document.createElement('label');
-        labelTag.setAttribute('for', 'feat-' + f.key);
-        labelTag.style.cssText = 'font-weight:600;cursor:pointer;margin:0';
-        labelTag.textContent = f.label;
-        labelTd.appendChild(labelTag);
-
-        const descTd = document.createElement('td');
-        descTd.style.cssText = 'padding:8px;vertical-align:top;color:var(--muted)';
-        descTd.textContent = f.desc || '';
-
-        tr.appendChild(cbTd);
-        tr.appendChild(labelTd);
-        tr.appendChild(descTd);
-        tbody.appendChild(tr);
-      });
-      estimatorFeaturesEl.appendChild(tbody);
-    }
-    renderEstimatorFeatures();
-    catSel.addEventListener('change', renderEstimatorFeatures);
-
-    function toggleEstimator() {
-      const box = document.getElementById('estimator-box');
+    function toggleWants() {
+      const box = document.getElementById('wants-box');
       box.style.display = box.style.display === 'none' ? 'block' : 'none';
     }
 
-    // Marks the auto-generated checklist block inside the Details textarea, so
-    // re-calculating replaces it instead of piling up duplicates.
-    const CHECKLIST_MARKER = '--- Checklist ---';
-
-    function calculateEstimate() {
-      const type = document.getElementById('p-type').value;
-      const category = catSel.value;
-      const features = CATEGORY_FEATURES[category] || CATEGORY_FEATURES['Other'];
-      const selected = Array.from(estimatorFeaturesEl.querySelectorAll('input:checked')).map(cb => cb.value);
-      const est = estimateProject(category, type, selected);
-
-      const resultEl = document.getElementById('estimator-result');
-      resultEl.style.display = 'block';
-      resultEl.innerHTML =
-        '<strong>Estimated: ' + peso(est.min) + ' - ' + peso(est.max) + '</strong><br>' +
-        'Typical timeline: ~' + est.weeks + ' week' + (est.weeks > 1 ? 's' : '') + '<br>' +
-        '<button type="button" class="btn btn-primary btn-sm" style="margin-top:8px" onclick="useEstimate(' + est.min + ',' + est.max + ')">Use This Estimate</button>';
-
-      // Fold the checked items + "Iba pa" text into Details so developers actually see them.
-      const chosenLabels = features.filter(f => selected.includes(f.key)).map(f => '- ' + f.label);
-      const others = document.getElementById('p-others').value.trim();
-      if (others) chosenLabels.push('- Iba pa: ' + others);
-
+    function addWants() {
+      const wants = document.getElementById('p-wants').value.trim();
+      if (!wants) return;
       const detailsEl = document.getElementById('p-details');
-      const base = detailsEl.value.split(CHECKLIST_MARKER)[0].trim();
-      if (chosenLabels.length) {
-        detailsEl.value = (base ? base + '\n\n' : '') + CHECKLIST_MARKER + '\n' + chosenLabels.join('\n');
-      } else {
-        detailsEl.value = base;
-      }
-    }
-
-    function useEstimate(min, max) {
-      document.getElementById('p-budget-min').value = min;
-      document.getElementById('p-budget-max').value = max;
-      const customIndex = BUDGET_PRESETS.length - 1;
-      presetSel.value = customIndex;
+      detailsEl.value = detailsEl.value ? detailsEl.value + '\n\n' + wants : wants;
+      document.getElementById('p-wants').value = '';
+      document.getElementById('wants-box').style.display = 'none';
     }
 
     document.getElementById('post-form').addEventListener('submit', async (e) => {
