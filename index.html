@@ -31,6 +31,8 @@
   </div>
 
   <section class="hero">
+    <div class="hero-slideshow" id="hero-slideshow"></div>
+    <div class="hero-overlay"></div>
     <div class="hero-inner">
       <h1>Work at the speed of your ambition</h1>
       <p>
@@ -120,5 +122,47 @@
     <div class="footer-tagline">Dev<span style="color:var(--accent)">Konek</span></div>
     © 2026 DevKonek — Connecting businesses and developers worldwide.
   </footer>
+
+  <script>
+    // Hero slideshow — checks which images/hero-N.jpg files actually exist (any can be
+    // missing) and crossfades between whichever ones loaded successfully. Falls back to
+    // the plain gradient background if none of them exist yet.
+    (function () {
+      const candidates = ['images/hero-1.jpg', 'images/hero-2.jpg', 'images/hero-3.jpg', 'images/hero-4.jpg', 'images/hero-5.jpg'];
+      const wrap = document.getElementById('hero-slideshow');
+      let loaded = [];
+      let pending = candidates.length;
+
+      candidates.forEach(src => {
+        const img = new Image();
+        img.onload = () => { loaded.push(src); done(); };
+        img.onerror = done;
+        img.src = src;
+      });
+
+      function done() {
+        pending--;
+        if (pending > 0) return;
+        if (!loaded.length) return;
+
+        loaded.forEach((src, i) => {
+          const slide = document.createElement('div');
+          slide.className = 'hero-slide' + (i === 0 ? ' active' : '');
+          slide.style.backgroundImage = "url('" + src + "')";
+          wrap.appendChild(slide);
+        });
+
+        if (loaded.length > 1) {
+          let current = 0;
+          setInterval(() => {
+            const slides = wrap.querySelectorAll('.hero-slide');
+            slides[current].classList.remove('active');
+            current = (current + 1) % slides.length;
+            slides[current].classList.add('active');
+          }, 5000);
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

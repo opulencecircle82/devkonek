@@ -78,6 +78,7 @@ a { color: var(--primary); text-decoration: none; }
 .hero {
   position: relative; overflow: hidden; text-align: center;
   padding: 100px 16px 70px; color: #fff;
+  /* Fallback look — shows through until/unless slideshow photos are added to images/. */
   background: linear-gradient(135deg, #0b1220 0%, #16213e 55%, #1a2c52 100%);
 }
 .hero::before, .hero::after {
@@ -85,7 +86,19 @@ a { color: var(--primary); text-decoration: none; }
 }
 .hero::before { width: 420px; height: 420px; background: var(--primary); top: -140px; left: -100px; }
 .hero::after { width: 380px; height: 380px; background: var(--accent); bottom: -160px; right: -80px; }
-.hero-inner { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+
+.hero-slideshow { position: absolute; inset: 0; z-index: 0; }
+.hero-slide {
+  position: absolute; inset: 0; background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 1.8s ease-in-out;
+}
+.hero-slide.active { opacity: 1; }
+.hero-overlay {
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(135deg, rgba(11,18,32,0.82) 0%, rgba(22,33,62,0.78) 55%, rgba(26,44,82,0.75) 100%);
+}
+
+.hero-inner { position: relative; z-index: 2; max-width: 720px; margin: 0 auto; }
 .hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.5px; line-height: 1.1; }
 .hero p { font-size: 18px; color: rgba(255,255,255,0.85); max-width: 620px; margin: 0 auto; }
 
