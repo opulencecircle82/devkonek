@@ -20,3 +20,18 @@ function updateThemeButton() {
 }
 
 document.addEventListener('DOMContentLoaded', updateThemeButton);
+
+function toggleSettingsMenu() {
+  const menu = document.getElementById('settings-menu');
+  if (!menu) return;
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('click', function (e) {
+  const menu = document.getElementById('settings-menu');
+  const btn = document.getElementById('settings-btn');
+  if (!menu || menu.style.display === 'none') return;
+  if (!menu.contains(e.target) && e.target !== btn) {
+    menu.style.display = 'none';
+  }
+});
