@@ -50,8 +50,10 @@
           <div class="card" style="background:#f0f9ff;border-color:#bae6fd;margin:12px 0">
             <button type="button" class="btn btn-outline btn-sm" onclick="toggleEstimator()">🧮 Not sure about your budget? Get a Price Estimate</button>
             <div id="estimator-box" style="display:none;margin-top:12px">
-              <label style="margin-top:0">Which features do you need? (check all that apply)</label>
+              <label style="margin-top:0">Ano ang kailangan mo? (check all that apply)</label>
               <div id="estimator-features" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+              <label>Iba pa? (optional — isulat sa sarili mong salita, ang developers na ang bahala sa technical details)</label>
+              <input type="text" id="p-others" placeholder="e.g. gusto ko rin ng loyalty points para sa suki">
               <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="calculateEstimate()">Calculate Estimate</button>
               <div id="estimator-result" style="display:none;margin-top:10px" class="contact-box"></div>
             </div>
@@ -152,29 +154,40 @@
     });
     presetSel.dispatchEvent(new Event('change'));
 
-    // Price estimator
+    // Price estimator — checklist is rebuilt per category, in plain business terms.
     const estimatorFeaturesEl = document.getElementById('estimator-features');
-    ESTIMATOR_FEATURES.forEach(f => {
-      const lbl = document.createElement('label');
-      lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;' +
-        'border:1px solid var(--border);border-radius:999px;padding:4px 10px;cursor:pointer;margin:0;background:#fff';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.value = f.key;
-      cb.style.width = 'auto';
-      lbl.appendChild(cb);
-      lbl.appendChild(document.createTextNode(f.label));
-      estimatorFeaturesEl.appendChild(lbl);
-    });
+    function renderEstimatorFeatures() {
+      const features = CATEGORY_FEATURES[catSel.value] || CATEGORY_FEATURES['Other'];
+      estimatorFeaturesEl.innerHTML = '';
+      features.forEach(f => {
+        const lbl = document.createElement('label');
+        lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;' +
+          'border:1px solid var(--border);border-radius:999px;padding:4px 10px;cursor:pointer;margin:0;background:#fff';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = f.key;
+        cb.style.width = 'auto';
+        lbl.appendChild(cb);
+        lbl.appendChild(document.createTextNode(f.label));
+        estimatorFeaturesEl.appendChild(lbl);
+      });
+    }
+    renderEstimatorFeatures();
+    catSel.addEventListener('change', renderEstimatorFeatures);
 
     function toggleEstimator() {
       const box = document.getElementById('estimator-box');
       box.style.display = box.style.display === 'none' ? 'block' : 'none';
     }
 
+    // Marks the auto-generated checklist block inside the Details textarea, so
+    // re-calculating replaces it instead of piling up duplicates.
+    const CHECKLIST_MARKER = '--- Checklist ---';
+
     function calculateEstimate() {
       const type = document.getElementById('p-type').value;
       const category = catSel.value;
+      const features = CATEGORY_FEATURES[category] || CATEGORY_FEATURES['Other'];
       const selected = Array.from(estimatorFeaturesEl.querySelectorAll('input:checked')).map(cb => cb.value);
       const est = estimateProject(category, type, selected);
 
@@ -184,6 +197,19 @@
         '<strong>Estimated: ' + peso(est.min) + ' - ' + peso(est.max) + '</strong><br>' +
         'Typical timeline: ~' + est.weeks + ' week' + (est.weeks > 1 ? 's' : '') + '<br>' +
         '<button type="button" class="btn btn-primary btn-sm" style="margin-top:8px" onclick="useEstimate(' + est.min + ',' + est.max + ')">Use This Estimate</button>';
+
+      // Fold the checked items + "Iba pa" text into Details so developers actually see them.
+      const chosenLabels = features.filter(f => selected.includes(f.key)).map(f => '- ' + f.label);
+      const others = document.getElementById('p-others').value.trim();
+      if (others) chosenLabels.push('- Iba pa: ' + others);
+
+      const detailsEl = document.getElementById('p-details');
+      const base = detailsEl.value.split(CHECKLIST_MARKER)[0].trim();
+      if (chosenLabels.length) {
+        detailsEl.value = (base ? base + '\n\n' : '') + CHECKLIST_MARKER + '\n' + chosenLabels.join('\n');
+      } else {
+        detailsEl.value = base;
+      }
     }
 
     function useEstimate(min, max) {

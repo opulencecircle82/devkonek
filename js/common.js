@@ -220,28 +220,80 @@ const ESTIMATOR_BASE = {
 
 const ESTIMATOR_TYPE_MULTIPLIER = { website: 1, mobile_app: 1.6, both: 2.2 };
 
-const ESTIMATOR_FEATURES = [
-  { key: 'auth', label: 'User Login / Accounts', min: 3000, max: 5000, weeks: 0.5 },
-  { key: 'payment', label: 'Payment Gateway (GCash/Card)', min: 8000, max: 15000, weeks: 1 },
-  { key: 'admin', label: 'Admin Dashboard', min: 5000, max: 10000, weeks: 1 },
-  { key: 'push', label: 'Push Notifications', min: 3000, max: 6000, weeks: 0.5 },
-  { key: 'chat', label: 'Real-time Chat', min: 5000, max: 10000, weeks: 1 },
-  { key: 'multilang', label: 'Multi-language Support', min: 3000, max: 6000, weeks: 0.5 },
-  { key: 'api', label: '3rd-Party API Integration', min: 4000, max: 8000, weeks: 0.5 },
-  { key: 'upload', label: 'File / Image Upload', min: 2000, max: 4000, weeks: 0.5 },
-  { key: 'search', label: 'Search & Filters', min: 2000, max: 4000, weeks: 0.5 },
-  { key: 'analytics', label: 'Analytics / Reports', min: 4000, max: 8000, weeks: 1 },
-  { key: 'offline', label: 'Offline Mode', min: 5000, max: 10000, weeks: 1 },
-  { key: 'social', label: 'Social Media Login', min: 2000, max: 4000, weeks: 0.5 }
-];
+// Checklist is phrased in plain business terms per category — clients don't know what
+// "API Integration" means, but they know what "kaya mag-print ng resibo" means. The
+// technical how is left to developers to figure out and compete on (contest model).
+const CATEGORY_FEATURES = {
+  'E-commerce / Online Store': [
+    { key: 'payment', label: 'Puwedeng magbayad online (GCash, Card, atbp.)', min: 8000, max: 15000, weeks: 1 },
+    { key: 'accounts', label: 'May sariling account/login ang bawat customer', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'admin', label: 'May admin panel ka para i-manage ang mga order/produkto', min: 5000, max: 10000, weeks: 1 },
+    { key: 'stock', label: 'May makikitang stock ng mga paninda', min: 4000, max: 8000, weeks: 1 },
+    { key: 'search', label: 'May search at filter ng produkto', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'notify', label: 'SMS/Email updates sa customer (order status)', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'delivery', label: 'Tracking ng delivery/rider', min: 5000, max: 10000, weeks: 1 }
+  ],
+  'POS System': [
+    { key: 'receipt', label: 'Kaya mag-print ng resibo', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'stock', label: 'May stock/inventory tracking', min: 4000, max: 8000, weeks: 1 },
+    { key: 'staff', label: 'Maraming cashier/staff account, may sariling login', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'reports', label: 'May sales report', min: 4000, max: 8000, weeks: 1 },
+    { key: 'offline', label: 'Gumagana kahit walang internet', min: 5000, max: 10000, weeks: 1 },
+    { key: 'barcode', label: 'Barcode scanning', min: 3000, max: 6000, weeks: 0.5 }
+  ],
+  'Booking / Reservation': [
+    { key: 'calendar', label: 'Online booking/calendar', min: 4000, max: 8000, weeks: 1 },
+    { key: 'reminder', label: 'SMS/email reminder sa customer', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'deposit', label: 'Online deposit/bayad', min: 8000, max: 15000, weeks: 1 },
+    { key: 'accounts', label: 'May account ang customer (booking history)', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'schedule', label: 'Schedule management ng maraming staff', min: 4000, max: 8000, weeks: 1 }
+  ],
+  'Food Delivery': [
+    { key: 'tracking', label: 'Live tracking ng order/rider', min: 8000, max: 15000, weeks: 1.5 },
+    { key: 'payment', label: 'Online payment (GCash/Card)', min: 8000, max: 15000, weeks: 1 },
+    { key: 'notify', label: 'Push notification updates', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'branches', label: 'Maraming branch/resto', min: 5000, max: 10000, weeks: 1 },
+    { key: 'rating', label: 'Rating/review ng customer', min: 2000, max: 4000, weeks: 0.5 }
+  ],
+  'Portfolio / Company Website': [
+    { key: 'contact', label: 'Contact form', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'gallery', label: 'Gallery ng mga larawan/portfolio', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'blog', label: 'Blog/News section', min: 3000, max: 6000, weeks: 1 },
+    { key: 'multilang', label: 'Filipino at English na bersyon', min: 3000, max: 6000, weeks: 0.5 }
+  ],
+  'Inventory Management': [
+    { key: 'barcode', label: 'Barcode scanning', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'branches', label: 'Maraming warehouse/branch', min: 5000, max: 10000, weeks: 1 },
+    { key: 'alerts', label: 'Automatic alert kapag paubos na ang stock', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'reports', label: 'Reports', min: 4000, max: 8000, weeks: 1 }
+  ],
+  'Landing Page': [
+    { key: 'contact', label: 'Contact form', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'social', label: 'Social media links', min: 1000, max: 2000, weeks: 0.5 },
+    { key: 'newsletter', label: 'Newsletter/Email signup', min: 2000, max: 4000, weeks: 0.5 }
+  ],
+  'School / LMS': [
+    { key: 'quiz', label: 'Online quiz/exam', min: 5000, max: 10000, weeks: 1 },
+    { key: 'grades', label: 'Grade tracking', min: 4000, max: 8000, weeks: 1 },
+    { key: 'upload', label: 'Video/file upload ng mga lesson', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'parent', label: 'Access para sa magulang/guardian', min: 3000, max: 6000, weeks: 0.5 }
+  ],
+  'Other': [
+    { key: 'accounts', label: 'May account/login ang users', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'payment', label: 'Online payment', min: 8000, max: 15000, weeks: 1 },
+    { key: 'admin', label: 'May admin panel', min: 5000, max: 10000, weeks: 1 },
+    { key: 'notify', label: 'Notifications (SMS/Email/Push)', min: 3000, max: 6000, weeks: 0.5 }
+  ]
+};
 
 function estimateProject(category, type, selectedFeatureKeys) {
   const base = ESTIMATOR_BASE[category] || ESTIMATOR_BASE['Other'];
   const mult = ESTIMATOR_TYPE_MULTIPLIER[type] || 1;
+  const features = CATEGORY_FEATURES[category] || CATEGORY_FEATURES['Other'];
   let min = base.min * mult;
   let max = base.max * mult;
   let weeks = base.weeks;
-  ESTIMATOR_FEATURES.forEach(f => {
+  features.forEach(f => {
     if (selectedFeatureKeys.includes(f.key)) {
       min += f.min;
       max += f.max;
