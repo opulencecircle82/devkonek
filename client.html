@@ -51,7 +51,7 @@
             <button type="button" class="btn btn-outline btn-sm" onclick="toggleEstimator()">🧮 Not sure about your budget? Get a Price Estimate</button>
             <div id="estimator-box" style="display:none;margin-top:12px">
               <label style="margin-top:0">Ano ang kailangan mo? (check all that apply)</label>
-              <div id="estimator-features" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+              <div id="estimator-features" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
               <label>Iba pa? (optional — isulat sa sarili mong salita, ang developers na ang bahala sa technical details)</label>
               <input type="text" id="p-others" placeholder="e.g. gusto ko rin ng loyalty points para sa suki">
               <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="calculateEstimate()">Calculate Estimate</button>
@@ -154,22 +154,34 @@
     });
     presetSel.dispatchEvent(new Event('change'));
 
-    // Price estimator — checklist is rebuilt per category, in plain business terms.
+    // Price estimator — checklist is rebuilt per category, in plain business terms,
+    // each with a short explanation so non-technical clients know what they're picking.
     const estimatorFeaturesEl = document.getElementById('estimator-features');
     function renderEstimatorFeatures() {
       const features = CATEGORY_FEATURES[catSel.value] || CATEGORY_FEATURES['Other'];
       estimatorFeaturesEl.innerHTML = '';
       features.forEach(f => {
-        const lbl = document.createElement('label');
-        lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;' +
-          'border:1px solid var(--border);border-radius:999px;padding:4px 10px;cursor:pointer;margin:0;background:#fff';
+        const row = document.createElement('label');
+        row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;font-weight:400;' +
+          'border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;margin:0;background:#fff';
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.value = f.key;
-        cb.style.width = 'auto';
-        lbl.appendChild(cb);
-        lbl.appendChild(document.createTextNode(f.label));
-        estimatorFeaturesEl.appendChild(lbl);
+        cb.style.cssText = 'width:auto;margin-top:2px';
+        const textWrap = document.createElement('div');
+        const titleEl = document.createElement('div');
+        titleEl.style.cssText = 'font-size:13px;font-weight:600';
+        titleEl.textContent = f.label;
+        textWrap.appendChild(titleEl);
+        if (f.desc) {
+          const descEl = document.createElement('div');
+          descEl.style.cssText = 'font-size:12px;color:var(--muted);margin-top:2px';
+          descEl.textContent = f.desc;
+          textWrap.appendChild(descEl);
+        }
+        row.appendChild(cb);
+        row.appendChild(textWrap);
+        estimatorFeaturesEl.appendChild(row);
       });
     }
     renderEstimatorFeatures();

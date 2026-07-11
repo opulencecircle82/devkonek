@@ -225,64 +225,64 @@ const ESTIMATOR_TYPE_MULTIPLIER = { website: 1, mobile_app: 1.6, both: 2.2 };
 // technical how is left to developers to figure out and compete on (contest model).
 const CATEGORY_FEATURES = {
   'E-commerce / Online Store': [
-    { key: 'payment', label: 'Puwedeng magbayad online (GCash, Card, atbp.)', min: 8000, max: 15000, weeks: 1 },
-    { key: 'accounts', label: 'May sariling account/login ang bawat customer', min: 3000, max: 5000, weeks: 0.5 },
-    { key: 'admin', label: 'May admin panel ka para i-manage ang mga order/produkto', min: 5000, max: 10000, weeks: 1 },
-    { key: 'stock', label: 'May makikitang stock ng mga paninda', min: 4000, max: 8000, weeks: 1 },
-    { key: 'search', label: 'May search at filter ng produkto', min: 2000, max: 4000, weeks: 0.5 },
-    { key: 'notify', label: 'SMS/Email updates sa customer (order status)', min: 3000, max: 6000, weeks: 0.5 },
-    { key: 'delivery', label: 'Tracking ng delivery/rider', min: 5000, max: 10000, weeks: 1 }
+    { key: 'payment', label: 'Puwedeng magbayad online (GCash, Card, atbp.)', desc: 'Direktang babayaran ka ng customer sa app/website — hindi na COD/manual lang.', min: 8000, max: 15000, weeks: 1 },
+    { key: 'accounts', label: 'May sariling account/login ang bawat customer', desc: 'Makikita nila ang sarili nilang order history kapag bumalik sila.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'admin', label: 'May admin panel ka para i-manage ang mga order/produkto', desc: 'Sarili mong page para dagdag/tanggal ng produkto at tingnan ang mga order — hindi kailangan i-edit ang code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'stock', label: 'May makikitang stock ng mga paninda', desc: 'Makikita mo (at ng customer) kung ilan pa ang natitirang paninda.', min: 4000, max: 8000, weeks: 1 },
+    { key: 'search', label: 'May search at filter ng produkto', desc: 'Puwedeng maghanap ang customer ng specific na item o i-filter by category/presyo.', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'notify', label: 'SMS/Email updates sa customer (order status)', desc: 'Awtomatikong mapapadalhan ng SMS/email ang customer kapag na-confirm o na-deliver na ang order.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'delivery', label: 'Tracking ng delivery/rider', desc: 'Makikita ng customer kung saan na ang delivery/rider niya sa real-time.', min: 5000, max: 10000, weeks: 1 }
   ],
   'POS System': [
-    { key: 'receipt', label: 'Kaya mag-print ng resibo', min: 3000, max: 6000, weeks: 0.5 },
-    { key: 'stock', label: 'May stock/inventory tracking', min: 4000, max: 8000, weeks: 1 },
-    { key: 'staff', label: 'Maraming cashier/staff account, may sariling login', min: 3000, max: 5000, weeks: 0.5 },
-    { key: 'reports', label: 'May sales report', min: 4000, max: 8000, weeks: 1 },
-    { key: 'offline', label: 'Gumagana kahit walang internet', min: 5000, max: 10000, weeks: 1 },
-    { key: 'barcode', label: 'Barcode scanning', min: 3000, max: 6000, weeks: 0.5 }
+    { key: 'receipt', label: 'Kaya mag-print ng resibo', desc: 'Direktang puwedeng i-print ang resibo sa printer mo pagkatapos ng bawat benta.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'stock', label: 'May stock/inventory tracking', desc: 'Awtomatikong babawasan ang stock count kada benta, makikita mo agad kung kailan mag-re-restock.', min: 4000, max: 8000, weeks: 1 },
+    { key: 'staff', label: 'Maraming cashier/staff account, may sariling login', desc: 'Bawat empleyado may sariling account, para malaman mo kung sino ang nag-transact.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'reports', label: 'May sales report', desc: 'Makikita mo kung magkano ang kinita mo araw-araw/linggo-linggo, pinakamabenta na item, atbp.', min: 4000, max: 8000, weeks: 1 },
+    { key: 'offline', label: 'Gumagana kahit walang internet', desc: 'Puwede ka pa ring mag-benta kahit nawalan ng WiFi/data — mag-sy-sync na lang pag bumalik ang internet.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'barcode', label: 'Barcode scanning', desc: 'I-scan mo lang ang barcode ng produkto, hindi na kailangan mag-type ng presyo.', min: 3000, max: 6000, weeks: 0.5 }
   ],
   'Booking / Reservation': [
-    { key: 'calendar', label: 'Online booking/calendar', min: 4000, max: 8000, weeks: 1 },
-    { key: 'reminder', label: 'SMS/email reminder sa customer', min: 3000, max: 6000, weeks: 0.5 },
-    { key: 'deposit', label: 'Online deposit/bayad', min: 8000, max: 15000, weeks: 1 },
-    { key: 'accounts', label: 'May account ang customer (booking history)', min: 3000, max: 5000, weeks: 0.5 },
-    { key: 'schedule', label: 'Schedule management ng maraming staff', min: 4000, max: 8000, weeks: 1 }
+    { key: 'calendar', label: 'Online booking/calendar', desc: 'Makikita ng customer ang bakanteng oras/araw at puwede silang mag-book kahit saan.', min: 4000, max: 8000, weeks: 1 },
+    { key: 'reminder', label: 'SMS/email reminder sa customer', desc: 'Awtomatikong paalala bago ang appointment, para mabawasan ang no-show.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'deposit', label: 'Online deposit/bayad', desc: 'Kailangan munang magbayad ng deposit ang customer bago ma-confirm ang booking niya.', min: 8000, max: 15000, weeks: 1 },
+    { key: 'accounts', label: 'May account ang customer (booking history)', desc: 'Makikita ng customer ang mga dati at paparating niyang booking.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'schedule', label: 'Schedule management ng maraming staff', desc: 'Kung marami kang empleyado/stylist/atbp., bawat isa may sariling schedule na makikita.', min: 4000, max: 8000, weeks: 1 }
   ],
   'Food Delivery': [
-    { key: 'tracking', label: 'Live tracking ng order/rider', min: 8000, max: 15000, weeks: 1.5 },
-    { key: 'payment', label: 'Online payment (GCash/Card)', min: 8000, max: 15000, weeks: 1 },
-    { key: 'notify', label: 'Push notification updates', min: 3000, max: 6000, weeks: 0.5 },
-    { key: 'branches', label: 'Maraming branch/resto', min: 5000, max: 10000, weeks: 1 },
-    { key: 'rating', label: 'Rating/review ng customer', min: 2000, max: 4000, weeks: 0.5 }
+    { key: 'tracking', label: 'Live tracking ng order/rider', desc: 'Makikita ng customer sa mapa kung saan na ang order/rider niya, parang Grab/Foodpanda.', min: 8000, max: 15000, weeks: 1.5 },
+    { key: 'payment', label: 'Online payment (GCash/Card)', desc: 'Direktang babayaran ka sa app — hindi na cash-on-delivery lang.', min: 8000, max: 15000, weeks: 1 },
+    { key: 'notify', label: 'Push notification updates', desc: 'Awtomatikong notification sa customer kapag na-confirm, na-cook, o padating na ang order.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'branches', label: 'Maraming branch/resto', desc: 'Kung marami kang sanga/partner na resto, kayang i-manage lahat sa iisang app.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'rating', label: 'Rating/review ng customer', desc: 'Puwedeng mag-iwan ng rating/review ang customer pagkatapos ng order.', min: 2000, max: 4000, weeks: 0.5 }
   ],
   'Portfolio / Company Website': [
-    { key: 'contact', label: 'Contact form', min: 2000, max: 4000, weeks: 0.5 },
-    { key: 'gallery', label: 'Gallery ng mga larawan/portfolio', min: 2000, max: 4000, weeks: 0.5 },
-    { key: 'blog', label: 'Blog/News section', min: 3000, max: 6000, weeks: 1 },
-    { key: 'multilang', label: 'Filipino at English na bersyon', min: 3000, max: 6000, weeks: 0.5 }
+    { key: 'contact', label: 'Contact form', desc: 'May form na puwedeng sagutan ng bisita para direktang makausap ka.', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'gallery', label: 'Gallery ng mga larawan/portfolio', desc: 'Page na puwedeng i-browse ang mga larawan ng dati mong ginawa/trabaho.', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'blog', label: 'Blog/News section', desc: 'Puwede kang mag-post ng balita/artikulo na makikita ng mga bisita.', min: 3000, max: 6000, weeks: 1 },
+    { key: 'multilang', label: 'Filipino at English na bersyon', desc: 'Puwedeng ipalit ang wika ng website depende sa gusto ng bisita.', min: 3000, max: 6000, weeks: 0.5 }
   ],
   'Inventory Management': [
-    { key: 'barcode', label: 'Barcode scanning', min: 3000, max: 6000, weeks: 0.5 },
-    { key: 'branches', label: 'Maraming warehouse/branch', min: 5000, max: 10000, weeks: 1 },
-    { key: 'alerts', label: 'Automatic alert kapag paubos na ang stock', min: 3000, max: 6000, weeks: 0.5 },
-    { key: 'reports', label: 'Reports', min: 4000, max: 8000, weeks: 1 }
+    { key: 'barcode', label: 'Barcode scanning', desc: 'I-scan mo lang ang barcode para agad malaman/ma-update ang stock.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'branches', label: 'Maraming warehouse/branch', desc: 'Kaya i-track ang stock sa magkakaibang lokasyon nang magkakahiwalay.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'alerts', label: 'Automatic alert kapag paubos na ang stock', desc: 'Mapapaalala ka bago talaga maubos ang isang item, para makapag-order ka agad.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'reports', label: 'Reports', desc: 'Makikita mo ang buod ng stock movement — anong pumapasok/lumalabas.', min: 4000, max: 8000, weeks: 1 }
   ],
   'Landing Page': [
-    { key: 'contact', label: 'Contact form', min: 2000, max: 4000, weeks: 0.5 },
-    { key: 'social', label: 'Social media links', min: 1000, max: 2000, weeks: 0.5 },
-    { key: 'newsletter', label: 'Newsletter/Email signup', min: 2000, max: 4000, weeks: 0.5 }
+    { key: 'contact', label: 'Contact form', desc: 'May form na puwedeng sagutan ng bisita para direktang makausap ka.', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'social', label: 'Social media links', desc: 'May mga icon/link papunta sa Facebook, Instagram, atbp. mo.', min: 1000, max: 2000, weeks: 0.5 },
+    { key: 'newsletter', label: 'Newsletter/Email signup', desc: 'Puwedeng mag-iwan ng email ang bisita para bigyan mo ng updates/promo sa hinaharap.', min: 2000, max: 4000, weeks: 0.5 }
   ],
   'School / LMS': [
-    { key: 'quiz', label: 'Online quiz/exam', min: 5000, max: 10000, weeks: 1 },
-    { key: 'grades', label: 'Grade tracking', min: 4000, max: 8000, weeks: 1 },
-    { key: 'upload', label: 'Video/file upload ng mga lesson', min: 3000, max: 6000, weeks: 0.5 },
-    { key: 'parent', label: 'Access para sa magulang/guardian', min: 3000, max: 6000, weeks: 0.5 }
+    { key: 'quiz', label: 'Online quiz/exam', desc: 'Puwedeng gumawa ng pagsusulit na online sasagutan ng mga estudyante.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'grades', label: 'Grade tracking', desc: 'Makikita ng estudyante/guro ang mga grado sa isang lugar.', min: 4000, max: 8000, weeks: 1 },
+    { key: 'upload', label: 'Video/file upload ng mga lesson', desc: 'Puwedeng mag-upload ang guro ng video/PDF na aralin, mababasa/mapapanood ng estudyante anumang oras.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'parent', label: 'Access para sa magulang/guardian', desc: 'May sariling login din ang magulang para masubaybayan ang progress ng anak.', min: 3000, max: 6000, weeks: 0.5 }
   ],
   'Other': [
-    { key: 'accounts', label: 'May account/login ang users', min: 3000, max: 5000, weeks: 0.5 },
-    { key: 'payment', label: 'Online payment', min: 8000, max: 15000, weeks: 1 },
-    { key: 'admin', label: 'May admin panel', min: 5000, max: 10000, weeks: 1 },
-    { key: 'notify', label: 'Notifications (SMS/Email/Push)', min: 3000, max: 6000, weeks: 0.5 }
+    { key: 'accounts', label: 'May account/login ang users', desc: 'Bawat gumagamit ay may sarili niyang account.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'payment', label: 'Online payment', desc: 'Puwedeng magbayad online sa loob mismo ng app/website.', min: 8000, max: 15000, weeks: 1 },
+    { key: 'admin', label: 'May admin panel', desc: 'Sarili mong page para pamahalaan ang laman ng app/website nang hindi kailangan mag-code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'notify', label: 'Notifications (SMS/Email/Push)', desc: 'Awtomatikong mapapadalhan ng abiso ang users tungkol sa mga update.', min: 3000, max: 6000, weeks: 0.5 }
   ]
 };
 
