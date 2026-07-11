@@ -41,12 +41,15 @@
       <div class="stat-card"><div class="stat-value" id="stat-projects">-</div><div class="stat-label">Total Projects</div></div>
       <div class="stat-card"><div class="stat-value" id="stat-open">-</div><div class="stat-label">Open Projects</div></div>
       <div class="stat-card"><div class="stat-value" id="stat-gmv">-</div><div class="stat-label">Matched Value (accepted offers)</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-fees-collected">-</div><div class="stat-label">Fees Collected</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-fees-pending">-</div><div class="stat-label">Fees Pending</div></div>
     </div>
 
     <div class="card" style="background:#fffbeb;border-color:#fde68a">
       <p style="font-size:13px;color:#92400e">
-        <strong>Note:</strong> DevKonek does not process payments — clients and developers pay each other
-        directly after matching. "Matched Value" below is informational (sum of accepted offer prices), not money held by the platform.
+        <strong>Note:</strong> DevKonek does not have a payment gateway — clients and developers still pay each other
+        directly. The 8% platform fee shown below is a ledger only: it's calculated automatically when a project
+        is marked completed, but developers settle it manually (e.g. GCash) — use the Fees tab to confirm payment.
       </p>
     </div>
 
@@ -56,6 +59,7 @@
       <button class="tab" data-tab="users">Users</button>
       <button class="tab" data-tab="reviews">Reviews</button>
       <button class="tab" data-tab="reports">Reports <span id="reports-badge"></span></button>
+      <button class="tab" data-tab="fees">Fees <span id="fees-badge"></span></button>
     </div>
 
     <div id="tab-projects"><div id="projects-list"></div></div>
@@ -63,6 +67,7 @@
     <div id="tab-users" style="display:none"><div id="users-list"></div></div>
     <div id="tab-reports" style="display:none"><div id="reports-list"></div></div>
     <div id="tab-reviews" style="display:none"><div id="reviews-list"></div></div>
+    <div id="tab-fees" style="display:none"><div id="fees-list"></div></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -74,16 +79,17 @@
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
-      ['projects', 'offers', 'users', 'reviews', 'reports'].forEach(name => {
+      ['projects', 'offers', 'users', 'reviews', 'reports', 'fees'].forEach(name => {
         document.getElementById('tab-' + name).style.display = t.dataset.tab === name ? 'block' : 'none';
       });
     }));
 
     async function loadStats() {
-      const [{ data: profiles }, { data: projects }, { data: offers }] = await Promise.all([
+      const [{ data: profiles }, { data: projects }, { data: offers }, { data: fees }] = await Promise.all([
         db.from('profiles').select('role'),
         db.from('projects').select('status'),
-        db.from('offers').select('price, status')
+        db.from('offers').select('price, status'),
+        db.from('platform_fees').select('fee_amount, status')
       ]);
 
       document.getElementById('stat-users').textContent = (profiles || []).length;
@@ -94,6 +100,11 @@
 
       const gmv = (offers || []).filter(o => o.status === 'accepted').reduce((sum, o) => sum + o.price, 0);
       document.getElementById('stat-gmv').textContent = peso(gmv);
+
+      const collected = (fees || []).filter(f => f.status === 'paid').reduce((sum, f) => sum + f.fee_amount, 0);
+      const pending = (fees || []).filter(f => f.status === 'unpaid').reduce((sum, f) => sum + f.fee_amount, 0);
+      document.getElementById('stat-fees-collected').textContent = peso(collected);
+      document.getElementById('stat-fees-pending').textContent = peso(pending);
     }
 
     async function loadProjects() {
@@ -286,6 +297,48 @@
       loadUsers();
     }
 
+    async function loadFees() {
+      const el = document.getElementById('fees-list');
+      el.innerHTML = '<div class="empty-state">Loading...</div>';
+      const { data: fees, error } = await db.from('platform_fees')
+        .select('*, projects(title), profiles:developer_id(full_name, contact)')
+        .order('created_at', { ascending: false });
+      if (error) { el.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
+
+      const unpaidCount = (fees || []).filter(f => f.status === 'unpaid').length;
+      document.getElementById('fees-badge').innerHTML = unpaidCount
+        ? '<span class="badge badge-cancelled">' + unpaidCount + '</span>' : '';
+
+      if (!fees.length) { el.innerHTML = '<div class="empty-state">No platform fees yet — these appear once a project is marked completed.</div>'; return; }
+
+      el.innerHTML = '';
+      fees.forEach(f => {
+        const proj = f.projects || {};
+        const dev = f.profiles || {};
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(proj.title || '(deleted)') + '</h3>' + statusBadge(f.status) + '</div>' +
+          '<div class="item-meta">Developer: ' + escapeHtml(dev.full_name || '?') + ' (' + escapeHtml(dev.contact || '') + ')' +
+          ' · Project value: ' + peso(f.offer_price) + ' · Fee (8%): <strong>' + peso(f.fee_amount) + '</strong>' +
+          ' · ' + fmtDate(f.created_at) + '</div>' +
+          (f.status === 'unpaid'
+            ? '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="adminMarkFeePaid(\'' + f.id + '\')">Mark as Paid</button>'
+            : '');
+        el.appendChild(card);
+      });
+    }
+
+    async function adminMarkFeePaid(feeId) {
+      if (!confirm('Confirm you have received this fee payment?')) return;
+      const { error } = await db.from('platform_fees')
+        .update({ status: 'paid', paid_at: new Date().toISOString() }).eq('id', feeId);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadFees();
+      loadStats();
+    }
+
     function showLogin(errorMsg) {
       document.getElementById('login-view').style.display = 'block';
       document.getElementById('dashboard-view').style.display = 'none';
@@ -299,7 +352,7 @@
       document.getElementById('dashboard-view').style.display = 'block';
       document.getElementById('logout-btn').style.display = 'inline-block';
       document.getElementById('welcome').textContent = 'Hi, ' + profile.full_name;
-      await Promise.all([loadStats(), loadProjects(), loadOffers(), loadUsers(), loadReviews(), loadReports()]);
+      await Promise.all([loadStats(), loadProjects(), loadOffers(), loadUsers(), loadReviews(), loadReports(), loadFees()]);
     }
 
     // Check current session on load — reuses it if already logged in as an admin.

@@ -308,21 +308,37 @@
         return;
       }
 
+      const { data: fees } = await db.from('platform_fees').select('*').eq('developer_id', me.user.id);
+      const feesByProject = new Map((fees || []).map(f => [f.project_id, f]));
+
       const total = earned.reduce((sum, o) => sum + o.price, 0);
+      const totalFees = (fees || []).reduce((sum, f) => sum + f.fee_amount, 0);
+      const unpaidFees = (fees || []).filter(f => f.status === 'unpaid').reduce((sum, f) => sum + f.fee_amount, 0);
+
       listEl.innerHTML = '';
       const summary = document.createElement('div');
       summary.className = 'card';
-      summary.innerHTML = '<h2>Total Earned: <span style="color:var(--green)">' + peso(total) + '</span></h2>';
+      summary.innerHTML =
+        '<h2>Total Earned: <span style="color:var(--green)">' + peso(total) + '</span></h2>' +
+        '<div class="item-meta" style="margin-top:6px">Platform Fee (8%): -' + peso(totalFees) +
+        ' · Net: ' + peso(total - totalFees) + '</div>' +
+        (unpaidFees > 0
+          ? '<div class="contact-box" style="margin-top:10px;background:#fef3c7;border-color:#fde68a">' +
+            '<strong>⚠️ ' + peso(unpaidFees) + ' in platform fees unpaid.</strong> ' +
+            'Please settle via GCash and message the admin (lean@devkonek) to confirm.</div>'
+          : '');
       listEl.appendChild(summary);
 
       earned.forEach(o => {
+        const fee = feesByProject.get(o.project_id);
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML =
           '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px">' +
           '<h3>' + escapeHtml(o.projects.title) + '</h3>' +
           '<div class="price-tag">' + peso(o.price) + '</div></div>' +
-          '<div class="item-meta">Completed · ' + escapeHtml(o.projects.category || '') + '</div>';
+          '<div class="item-meta">Completed · ' + escapeHtml(o.projects.category || '') +
+          (fee ? ' · Fee: ' + peso(fee.fee_amount) + ' ' + statusBadge(fee.status) : '') + '</div>';
         listEl.appendChild(card);
       });
     }

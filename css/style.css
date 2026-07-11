@@ -109,6 +109,9 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); b
 .badge-accepted { background: #d1fae5; color: var(--green); }
 .badge-declined { background: #fee2e2; color: var(--red); }
 .badge-skill { background: #ede9fe; color: #6d28d9; margin: 2px; }
+.badge-unpaid { background: #fef3c7; color: #b45309; }
+.badge-paid { background: #d1fae5; color: var(--green); }
+.badge-waived { background: #e5e7eb; color: var(--muted); }
 
 /* ---------- Lists ---------- */
 .item-row {

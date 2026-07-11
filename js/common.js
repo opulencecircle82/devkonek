@@ -114,7 +114,9 @@ function buildStarPicker(containerId, initialValue) {
 function statusBadge(status) {
   const labels = {
     open: 'Open', in_progress: 'In Progress', completed: 'Completed',
-    cancelled: 'Cancelled', pending: 'Pending', accepted: 'Accepted', declined: 'Declined'
+    cancelled: 'Cancelled', pending: 'Pending', accepted: 'Accepted', declined: 'Declined',
+    unpaid: 'Fee Unpaid', paid: 'Fee Paid', waived: 'Fee Waived',
+    reviewed: 'Reviewed', dismissed: 'Dismissed'
   };
   return '<span class="badge badge-' + status + '">' + (labels[status] || status) + '</span>';
 }
