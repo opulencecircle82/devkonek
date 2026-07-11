@@ -19,7 +19,27 @@ function updateThemeButton() {
   btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
 }
 
-document.addEventListener('DOMContentLoaded', updateThemeButton);
+// This site's UI text is English-only. Browsers already offer free, automatic
+// translation (Chrome/Edge show a "Translate this page?" prompt) whenever the
+// page's declared language (lang="en") differs from the visitor's own browser
+// language — no in-house translation needed. This just makes that option visible.
+function renderLangNote() {
+  var el = document.getElementById('lang-note');
+  if (!el) return;
+  var browserLang = (navigator.language || 'en').split('-')[0];
+  if (browserLang === 'en') {
+    el.textContent = '🌐 Language: English';
+  } else {
+    el.textContent = '🌐 This site is in English. Right-click anywhere and choose "Translate to ' +
+      (new Intl.DisplayNames ? new Intl.DisplayNames([navigator.language], { type: 'language' }).of(browserLang) : 'your language') +
+      '" — or look for a translate icon in your browser\'s address bar.';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  updateThemeButton();
+  renderLangNote();
+});
 
 function toggleSettingsMenu() {
   const menu = document.getElementById('settings-menu');

@@ -15,8 +15,9 @@
         <span id="welcome" style="font-size:14px;color:var(--muted)"></span>
         <div style="position:relative">
           <button class="btn btn-outline btn-sm" id="settings-btn" onclick="toggleSettingsMenu()">⚙️ Settings</button>
-          <div id="settings-menu" style="display:none;position:absolute;right:0;top:110%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;min-width:160px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:20">
+          <div id="settings-menu" style="display:none;position:absolute;right:0;top:110%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;min-width:220px;box-shadow:0 4px 12px rgba(0,0,0,0.15);z-index:20;text-align:left">
             <button class="btn btn-outline btn-sm" id="theme-toggle-btn" onclick="toggleTheme()" style="width:100%"></button>
+            <div id="lang-note" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.5"></div>
           </div>
         </div>
         <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
