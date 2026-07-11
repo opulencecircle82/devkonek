@@ -14,6 +14,12 @@
 --     (needed so job/developer browsing still works before any relationship exists).
 --  2. The base profiles table's SELECT policy is tightened to: your own row, an
 --     admin, or someone you have an actual project/offer relationship with.
+--
+-- The admin check must go through a SECURITY DEFINER function, not an inline
+-- subquery on profiles — a policy on profiles that subqueries profiles directly
+-- triggers "infinite recursion detected in policy for relation profiles" in
+-- Postgres. The function runs as its (RLS-bypassing) owner, so the internal
+-- lookup never re-triggers this same policy.
 
 -- ============ 1. PUBLIC-SAFE VIEW ============
 
@@ -23,13 +29,24 @@ from public.profiles;
 
 grant select on public.public_profiles to authenticated;
 
--- ============ 2. TIGHTEN profiles_select ============
+-- ============ 2. is_admin() HELPER (avoids RLS self-recursion) ============
+
+create or replace function public.is_admin() returns boolean
+language sql security definer stable
+set search_path = public
+as $$
+  select coalesce((select p.is_admin from public.profiles p where p.id = auth.uid()), false);
+$$;
+
+grant execute on function public.is_admin() to authenticated;
+
+-- ============ 3. TIGHTEN profiles_select ============
 
 drop policy if exists "profiles_select" on public.profiles;
 create policy "profiles_select" on public.profiles
   for select to authenticated using (
     id = auth.uid()
-    or exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
+    or public.is_admin()
     or exists (
       select 1 from public.projects pr
       join public.offers o on o.project_id = pr.id
