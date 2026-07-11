@@ -48,10 +48,12 @@
           </div>
 
           <div class="card" style="background:#f0f9ff;border-color:#bae6fd;margin:12px 0">
-            <button type="button" class="btn btn-outline btn-sm" onclick="toggleEstimator()">🧮 Not sure about your budget? Get a Price Estimate</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="toggleEstimator()">📋 Ano ang gusto mong ilagay sa website/app mo?</button>
             <div id="estimator-box" style="display:none;margin-top:12px">
-              <label style="margin-top:0">Ano ang kailangan mo? (check all that apply)</label>
-              <div id="estimator-features" style="display:flex;flex-direction:column;gap:6px;margin-top:4px"></div>
+              <label style="margin-top:0">I-check ang lahat ng gusto mo</label>
+              <div style="overflow-x:auto">
+                <table id="estimator-features" style="width:100%;border-collapse:collapse;font-size:13px"></table>
+              </div>
               <label>Iba pa? (optional — isulat sa sarili mong salita, ang developers na ang bahala sa technical details)</label>
               <input type="text" id="p-others" placeholder="e.g. gusto ko rin ng loyalty points para sa suki">
               <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="calculateEstimate()">Calculate Estimate</button>
@@ -155,34 +157,54 @@
     presetSel.dispatchEvent(new Event('change'));
 
     // Price estimator — checklist is rebuilt per category, in plain business terms,
-    // each with a short explanation so non-technical clients know what they're picking.
+    // shown as a table (checkbox | feature | explanation) so non-technical clients
+    // can scan it like a spreadsheet.
     const estimatorFeaturesEl = document.getElementById('estimator-features');
     function renderEstimatorFeatures() {
       const features = CATEGORY_FEATURES[catSel.value] || CATEGORY_FEATURES['Other'];
       estimatorFeaturesEl.innerHTML = '';
+
+      const thead = document.createElement('thead');
+      thead.innerHTML =
+        '<tr style="background:#f8fafc;text-align:left">' +
+        '<th style="padding:8px;border-bottom:1px solid var(--border);width:32px"></th>' +
+        '<th style="padding:8px;border-bottom:1px solid var(--border)">Kailangan mo ba ito?</th>' +
+        '<th style="padding:8px;border-bottom:1px solid var(--border)">Ano ito</th>' +
+        '</tr>';
+      estimatorFeaturesEl.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
       features.forEach(f => {
-        const row = document.createElement('label');
-        row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;font-weight:400;' +
-          'border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;margin:0;background:#fff';
+        const tr = document.createElement('tr');
+        tr.style.cssText = 'border-bottom:1px solid var(--border)';
+
+        const cbTd = document.createElement('td');
+        cbTd.style.cssText = 'padding:8px;vertical-align:top';
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.value = f.key;
-        cb.style.cssText = 'width:auto;margin-top:2px';
-        const textWrap = document.createElement('div');
-        const titleEl = document.createElement('div');
-        titleEl.style.cssText = 'font-size:13px;font-weight:600';
-        titleEl.textContent = f.label;
-        textWrap.appendChild(titleEl);
-        if (f.desc) {
-          const descEl = document.createElement('div');
-          descEl.style.cssText = 'font-size:12px;color:var(--muted);margin-top:2px';
-          descEl.textContent = f.desc;
-          textWrap.appendChild(descEl);
-        }
-        row.appendChild(cb);
-        row.appendChild(textWrap);
-        estimatorFeaturesEl.appendChild(row);
+        cb.id = 'feat-' + f.key;
+        cb.style.width = 'auto';
+        cbTd.appendChild(cb);
+
+        const labelTd = document.createElement('td');
+        labelTd.style.cssText = 'padding:8px;vertical-align:top;font-weight:600';
+        const labelTag = document.createElement('label');
+        labelTag.setAttribute('for', 'feat-' + f.key);
+        labelTag.style.cssText = 'font-weight:600;cursor:pointer;margin:0';
+        labelTag.textContent = f.label;
+        labelTd.appendChild(labelTag);
+
+        const descTd = document.createElement('td');
+        descTd.style.cssText = 'padding:8px;vertical-align:top;color:var(--muted)';
+        descTd.textContent = f.desc || '';
+
+        tr.appendChild(cbTd);
+        tr.appendChild(labelTd);
+        tr.appendChild(descTd);
+        tbody.appendChild(tr);
       });
+      estimatorFeaturesEl.appendChild(tbody);
     }
     renderEstimatorFeatures();
     catSel.addEventListener('change', renderEstimatorFeatures);
