@@ -135,79 +135,79 @@ const CATEGORIES = [
 // non-technical clients don't have to think of everything from scratch.
 const CATEGORY_SUGGESTIONS = {
   'E-commerce / Online Store': [
-    { label: 'Online payment (GCash, Card, atbp.)', desc: 'Direktang babayaran ka ng customer sa app/website — hindi na COD/manual lang.' },
-    { label: 'Account/login ng bawat customer', desc: 'Makikita nila ang sarili nilang order history kapag bumalik sila.' },
-    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng users, order, at produkto mo, hindi kailangan mag-code.' },
-    { label: 'Secure na database', desc: 'Ligtas ang datos ng customer gamit ang trusted na 3rd-party na database tulad ng Supabase.' },
-    { label: 'Makikitang stock ng mga paninda', desc: 'Makikita mo at ng customer kung ilan pa ang natitirang paninda.' },
-    { label: 'Search at filter ng produkto', desc: 'Puwedeng maghanap ang customer ng specific na item.' },
-    { label: 'SMS/Email updates sa customer', desc: 'Awtomatikong abiso kapag na-confirm o na-deliver na ang order.' },
-    { label: 'Tracking ng delivery/rider', desc: 'Makikita ng customer kung saan na ang delivery/rider niya.' }
+    { label: 'Online payment (GCash, Card, etc.)', desc: 'Customers pay you directly in the app/website — no more cash-on-delivery/manual only.' },
+    { label: 'Customer accounts/login', desc: 'Customers can see their own order history when they come back.' },
+    { label: 'Admin panel', desc: 'You control and view all users, orders, and products — no coding needed.' },
+    { label: 'Secure database', desc: "Your customers' data is kept safe using a trusted 3rd-party database like Supabase." },
+    { label: 'Visible stock of your products', desc: 'You and your customers can see how much stock is left.' },
+    { label: 'Search and filter products', desc: 'Customers can search for a specific item or filter by category/price.' },
+    { label: 'SMS/Email order updates', desc: 'Automatic notification to the customer when an order is confirmed or delivered.' },
+    { label: 'Delivery/rider tracking', desc: 'Customers can see where their delivery/rider is in real time.' }
   ],
   'POS System': [
-    { label: 'Kaya mag-print ng resibo', desc: 'Direktang puwedeng i-print ang resibo sa printer mo.' },
-    { label: 'Stock/inventory tracking', desc: 'Awtomatikong babawasan ang stock count kada benta.' },
-    { label: 'Maraming cashier/staff account', desc: 'Bawat empleyado may sariling login.' },
-    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng staff, benta, at produkto mo.' },
-    { label: 'Secure na database', desc: 'Ligtas ang datos ng benta/staff mo gamit ang Supabase.' },
-    { label: 'Sales report', desc: 'Makikita mo kung magkano ang kinita mo araw-araw/linggo-linggo.' },
-    { label: 'Gumagana kahit walang internet', desc: 'Puwede ka pa ring mag-benta kahit nawalan ng WiFi/data.' },
-    { label: 'Barcode scanning', desc: 'I-scan mo lang ang barcode ng produkto.' }
+    { label: 'Receipt printing', desc: 'Print a receipt directly from your printer after every sale.' },
+    { label: 'Stock/inventory tracking', desc: 'Stock count automatically goes down with every sale.' },
+    { label: 'Multiple cashier/staff accounts', desc: 'Each employee has their own login.' },
+    { label: 'Admin panel', desc: 'You control and view all staff, sales, and products — no coding needed.' },
+    { label: 'Secure database', desc: 'Your sales/staff data is kept safe using Supabase.' },
+    { label: 'Sales reports', desc: 'See how much you earned daily/weekly, best-selling items, etc.' },
+    { label: 'Works even without internet', desc: 'You can still make sales even if WiFi/data goes down — it syncs once back online.' },
+    { label: 'Barcode scanning', desc: 'Just scan the barcode of the product, no need to type in the price.' }
   ],
   'Booking / Reservation': [
-    { label: 'Online booking/calendar', desc: 'Makikita ng customer ang bakanteng oras/araw.' },
-    { label: 'SMS/email reminder sa customer', desc: 'Awtomatikong paalala bago ang appointment.' },
-    { label: 'Online deposit/bayad', desc: 'Kailangan munang magbayad ng deposit bago ma-confirm.' },
-    { label: 'Account ng customer', desc: 'Makikita ng customer ang mga dati at paparating niyang booking.' },
-    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng booking at customer mo.' },
-    { label: 'Secure na database', desc: 'Ligtas ang datos ng customer gamit ang Supabase.' },
-    { label: 'Schedule management ng maraming staff', desc: 'Bawat staff/stylist may sariling schedule.' }
+    { label: 'Online booking/calendar', desc: 'Customers can see open slots and book from anywhere.' },
+    { label: 'SMS/email reminders', desc: 'Automatic reminder before the appointment, to reduce no-shows.' },
+    { label: 'Online deposit/payment', desc: 'Customer must pay a deposit first before the booking is confirmed.' },
+    { label: 'Customer accounts', desc: "Customers can see their past and upcoming bookings." },
+    { label: 'Admin panel', desc: 'You control and view all bookings and customers — no coding needed.' },
+    { label: 'Secure database', desc: "Your customers' data is kept safe using Supabase." },
+    { label: 'Schedule management for multiple staff', desc: 'Each staff/stylist has their own visible schedule.' }
   ],
   'Food Delivery': [
-    { label: 'Live tracking ng order/rider', desc: 'Makikita ng customer sa mapa kung saan na ang order/rider niya.' },
-    { label: 'Online payment (GCash/Card)', desc: 'Direktang babayaran ka sa app.' },
-    { label: 'Account ng customer', desc: 'Makikita nila ang sarili nilang order history.' },
-    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng order, resto/branch, at rider.' },
-    { label: 'Secure na database', desc: 'Ligtas ang datos ng customer gamit ang Supabase.' },
-    { label: 'Push notification updates', desc: 'Abiso kapag na-confirm, na-cook, o padating na ang order.' },
-    { label: 'Maraming branch/resto', desc: 'Kayang i-manage lahat ng sanga sa iisang app.' },
-    { label: 'Rating/review ng customer', desc: 'Puwedeng mag-iwan ng rating pagkatapos ng order.' }
+    { label: 'Live order/rider tracking', desc: 'Customers can see on a map where their order/rider is, like Grab/Foodpanda.' },
+    { label: 'Online payment (GCash/Card)', desc: 'Customers pay you directly in the app.' },
+    { label: 'Customer accounts', desc: 'Customers can see their own order history.' },
+    { label: 'Admin panel', desc: 'You control and view all orders, branches/restaurants, and riders.' },
+    { label: 'Secure database', desc: "Your customers' data is kept safe using Supabase." },
+    { label: 'Push notification updates', desc: 'Notification when an order is confirmed, cooking, or arriving.' },
+    { label: 'Multiple branches/restaurants', desc: 'Manage all your branches/partner restaurants in one app.' },
+    { label: 'Customer ratings/reviews', desc: 'Customers can leave a rating after their order.' }
   ],
   'Portfolio / Company Website': [
-    { label: 'Contact form', desc: 'May form na puwedeng sagutan ng bisita para makausap ka.' },
-    { label: 'Gallery ng mga larawan/portfolio', desc: 'Page na puwedeng i-browse ang mga larawan ng dati mong ginawa.' },
-    { label: 'Madaling palitan ang content (admin panel)', desc: 'Puwede mong palitan ang text/larawan nang hindi mag-code.' },
-    { label: 'Blog/News section', desc: 'Puwede kang mag-post ng balita/artikulo.' },
-    { label: 'Filipino at English na bersyon', desc: 'Puwedeng ipalit ang wika ng website.' }
+    { label: 'Contact form', desc: 'A form visitors can fill out to reach you directly.' },
+    { label: 'Photo/portfolio gallery', desc: 'A page to browse photos of your past work.' },
+    { label: 'Easy content editing (admin panel)', desc: 'You can change the text/photos on your website without coding.' },
+    { label: 'Blog/News section', desc: 'You can post news/articles visitors can read.' },
+    { label: 'Filipino and English versions', desc: 'The website language can be switched.' }
   ],
   'Inventory Management': [
-    { label: 'Barcode scanning', desc: 'I-scan mo lang ang barcode para agad ma-update ang stock.' },
-    { label: 'Maraming warehouse/branch', desc: 'Kaya i-track ang stock sa magkakaibang lokasyon.' },
-    { label: 'Automatic alert kapag paubos na ang stock', desc: 'Mapapaalala ka bago talaga maubos ang isang item.' },
-    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng stock at staff mo.' },
-    { label: 'Secure na database', desc: 'Ligtas ang datos ng negosyo mo gamit ang Supabase.' },
-    { label: 'Reports', desc: 'Makikita mo ang buod ng stock movement.' }
+    { label: 'Barcode scanning', desc: 'Just scan the barcode to instantly update stock.' },
+    { label: 'Multiple warehouses/branches', desc: 'Track stock across different locations separately.' },
+    { label: 'Low-stock alerts', desc: "You'll be alerted before an item actually runs out." },
+    { label: 'Admin panel', desc: 'You control and view all stock and staff — no coding needed.' },
+    { label: 'Secure database', desc: 'Your business data is kept safe using Supabase.' },
+    { label: 'Reports', desc: 'See a summary of stock movement — what came in/out.' }
   ],
   'Landing Page': [
-    { label: 'Contact form', desc: 'May form na puwedeng sagutan ng bisita para makausap ka.' },
-    { label: 'Social media links', desc: 'May mga icon/link papunta sa Facebook, Instagram, atbp.' },
-    { label: 'Newsletter/Email signup', desc: 'Puwedeng mag-iwan ng email ang bisita.' },
-    { label: 'Secure na database para sa mga inquiry', desc: 'Ligtas ang mga email/inquiry na natatanggap mo gamit ang Supabase.' }
+    { label: 'Contact form', desc: 'A form visitors can fill out to reach you directly.' },
+    { label: 'Social media links', desc: 'Icons/links to your Facebook, Instagram, etc.' },
+    { label: 'Newsletter/email signup', desc: 'Visitors can leave their email for future updates/promos.' },
+    { label: 'Secure database for inquiries', desc: 'Emails/inquiries you receive are kept safe using Supabase.' }
   ],
   'School / LMS': [
-    { label: 'Online quiz/exam', desc: 'Puwedeng gumawa ng pagsusulit na online.' },
-    { label: 'Grade tracking', desc: 'Makikita ng estudyante/guro ang mga grado.' },
-    { label: 'Video/file upload ng mga lesson', desc: 'Puwedeng mag-upload ang guro ng video/PDF na aralin.' },
-    { label: 'Access para sa magulang/guardian', desc: 'May sariling login din ang magulang.' },
-    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng estudyante, guro, at grado.' },
-    { label: 'Secure na database', desc: 'Ligtas ang datos ng estudyante/guro gamit ang Supabase.' }
+    { label: 'Online quiz/exam', desc: 'Create tests that students take online.' },
+    { label: 'Grade tracking', desc: 'Students/teachers can see grades in one place.' },
+    { label: 'Video/file upload for lessons', desc: 'Teachers can upload video/PDF lessons, viewable anytime.' },
+    { label: 'Parent/guardian access', desc: "Parents get their own login to track their child's progress." },
+    { label: 'Admin panel', desc: 'You control and view all students, teachers, and grades.' },
+    { label: 'Secure database', desc: 'Student/teacher data is kept safe using Supabase.' }
   ],
   'Other': [
-    { label: 'Account/login ng users', desc: 'Bawat gumagamit ay may sarili niyang account.' },
-    { label: 'Online payment', desc: 'Puwedeng magbayad online sa loob mismo ng app/website.' },
-    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng users at data mo.' },
-    { label: 'Secure na database', desc: 'Ligtas ang datos ng users mo gamit ang Supabase.' },
-    { label: 'Notifications (SMS/Email/Push)', desc: 'Awtomatikong abiso sa users tungkol sa mga update.' }
+    { label: 'User accounts/login', desc: 'Each user has their own account.' },
+    { label: 'Online payment', desc: 'Users can pay online right inside the app/website.' },
+    { label: 'Admin panel', desc: 'You control and view all users and data — no coding needed.' },
+    { label: 'Secure database', desc: "Your users' data is kept safe using Supabase." },
+    { label: 'Notifications (SMS/Email/Push)', desc: 'Automatic alerts to users about updates.' }
   ]
 };
 
