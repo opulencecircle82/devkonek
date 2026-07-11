@@ -77,7 +77,8 @@ a { color: var(--primary); text-decoration: none; }
 /* ---------- Hero / landing ---------- */
 .hero {
   position: relative; overflow: hidden; text-align: center;
-  padding: 100px 16px 70px; color: #fff;
+  min-height: 92vh; display: flex; align-items: center; justify-content: center;
+  padding: 120px 16px 80px; color: #fff;
   /* Fallback look — shows through until/unless slideshow photos are added to images/. */
   background: linear-gradient(135deg, #0b1220 0%, #16213e 55%, #1a2c52 100%);
 }
@@ -98,9 +99,17 @@ a { color: var(--primary); text-decoration: none; }
   background: linear-gradient(135deg, rgba(11,18,32,0.82) 0%, rgba(22,33,62,0.78) 55%, rgba(26,44,82,0.75) 100%);
 }
 
-.hero-inner { position: relative; z-index: 2; max-width: 720px; margin: 0 auto; }
-.hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.5px; line-height: 1.1; }
-.hero p { font-size: 18px; color: rgba(255,255,255,0.85); max-width: 620px; margin: 0 auto; }
+.hero-inner { position: relative; z-index: 2; max-width: 760px; margin: 0 auto; }
+.hero h1 {
+  font-size: 54px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.5px; line-height: 1.1;
+  transition: opacity .6s ease; text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.hero p {
+  font-size: 19px; color: rgba(255,255,255,0.88); max-width: 620px; margin: 0 auto;
+  transition: opacity .6s ease;
+}
+.hero-text-fade { opacity: 0; }
+@media (max-width: 640px) { .hero h1 { font-size: 34px; } .hero { min-height: 80vh; } }
 
 .role-toggle {
   display: inline-flex; background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.3);

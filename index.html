@@ -34,8 +34,8 @@
     <div class="hero-slideshow" id="hero-slideshow"></div>
     <div class="hero-overlay"></div>
     <div class="hero-inner">
-      <h1>Work at the speed of your ambition</h1>
-      <p>
+      <h1 id="hero-headline">Work at the speed of your ambition</h1>
+      <p id="hero-subtext">
         Post what you need and compare real working demos with prices — or find your next
         gig and get paid for what you build.
       </p>
@@ -124,43 +124,77 @@
   </footer>
 
   <script>
-    // Hero slideshow — checks which images/hero-N.jpg files actually exist (any can be
-    // missing) and crossfades between whichever ones loaded successfully. Falls back to
-    // the plain gradient background if none of them exist yet.
+    // Hero slideshow — checks which images/hero-N.(jpg|png) files actually exist (any can
+    // be missing) and crossfades between whichever loaded, swapping the headline/subtext
+    // together with each image for a "big video" feel. Falls back to the plain gradient
+    // background + static text if no images exist yet.
     (function () {
-      const candidates = ['images/hero-1.jpg', 'images/hero-2.jpg', 'images/hero-3.jpg', 'images/hero-4.jpg', 'images/hero-5.jpg'];
+      const slots = [
+        { n: 1, ext: ['jpg', 'png'], headline: 'Real developers. Real working code.', sub: 'See a working demo before you hire — not just a written pitch.' },
+        { n: 2, ext: ['jpg', 'png'], headline: 'Where businesses and developers connect.', sub: 'Post a project or find your next gig — matched by fair prices and verified reviews.' },
+        { n: 3, ext: ['jpg', 'png'], headline: 'Work at the speed of your ambition.', sub: 'Post what you need and compare real working demos with prices — or find your next gig.' },
+        { n: 4, ext: ['jpg', 'png'], headline: 'Built for teams who need it done right.', sub: 'Secure, access-controlled, and backed by real safeguards on both sides.' },
+        { n: 5, ext: ['jpg', 'png'], headline: 'Get matched. Get building.', sub: 'Free to join, transparent pricing, and direct contact once you match.' }
+      ];
       const wrap = document.getElementById('hero-slideshow');
-      let loaded = [];
-      let pending = candidates.length;
+      const headlineEl = document.getElementById('hero-headline');
+      const subEl = document.getElementById('hero-subtext');
+      const found = [];
+      let pending = slots.length;
 
-      candidates.forEach(src => {
-        const img = new Image();
-        img.onload = () => { loaded.push(src); done(); };
-        img.onerror = done;
-        img.src = src;
+      slots.forEach(slot => {
+        tryExt(slot, 0);
       });
+
+      function tryExt(slot, i) {
+        if (i >= slot.ext.length) { done(); return; }
+        const src = 'images/hero-' + slot.n + '.' + slot.ext[i];
+        const img = new Image();
+        img.onload = () => { found[slot.n] = Object.assign({ src: src }, slot); done(); };
+        img.onerror = () => tryExt(slot, i + 1);
+        img.src = src;
+      }
 
       function done() {
         pending--;
         if (pending > 0) return;
-        if (!loaded.length) return;
 
-        loaded.forEach((src, i) => {
-          const slide = document.createElement('div');
-          slide.className = 'hero-slide' + (i === 0 ? ' active' : '');
-          slide.style.backgroundImage = "url('" + src + "')";
-          wrap.appendChild(slide);
+        const ordered = found.filter(Boolean);
+        if (!ordered.length) return;
+
+        ordered.forEach((slide, i) => {
+          const el = document.createElement('div');
+          el.className = 'hero-slide' + (i === 0 ? ' active' : '');
+          el.style.backgroundImage = "url('" + slide.src + "')";
+          wrap.appendChild(el);
         });
+        setText(ordered[0]);
 
-        if (loaded.length > 1) {
+        if (ordered.length > 1) {
           let current = 0;
           setInterval(() => {
-            const slides = wrap.querySelectorAll('.hero-slide');
-            slides[current].classList.remove('active');
-            current = (current + 1) % slides.length;
-            slides[current].classList.add('active');
+            const els = wrap.querySelectorAll('.hero-slide');
+            els[current].classList.remove('active');
+            current = (current + 1) % els.length;
+            els[current].classList.add('active');
+            swapText(ordered[current]);
           }, 5000);
         }
+      }
+
+      function setText(slide) {
+        headlineEl.textContent = slide.headline;
+        subEl.textContent = slide.sub;
+      }
+
+      function swapText(slide) {
+        headlineEl.classList.add('hero-text-fade');
+        subEl.classList.add('hero-text-fade');
+        setTimeout(() => {
+          setText(slide);
+          headlineEl.classList.remove('hero-text-fade');
+          subEl.classList.remove('hero-text-fade');
+        }, 600);
       }
     })();
   </script>
