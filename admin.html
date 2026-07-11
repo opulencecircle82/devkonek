@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevKonek — Admin Panel</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="logo">Dev<span>Konek</span> <span style="font-size:12px;color:var(--muted);font-weight:400">Admin</span></span>
+      <nav>
+        <span id="welcome" style="font-size:14px;color:var(--muted)"></span>
+        <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container" style="padding-top:20px">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-value" id="stat-users">-</div><div class="stat-label">Total Users</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-clients">-</div><div class="stat-label">Business Owners</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-devs">-</div><div class="stat-label">Developers</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-projects">-</div><div class="stat-label">Total Projects</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-open">-</div><div class="stat-label">Open Projects</div></div>
+      <div class="stat-card"><div class="stat-value" id="stat-gmv">-</div><div class="stat-label">Matched Value (accepted offers)</div></div>
+    </div>
+
+    <div class="card" style="background:#fffbeb;border-color:#fde68a">
+      <p style="font-size:13px;color:#92400e">
+        <strong>Note:</strong> DevKonek does not process payments — clients and developers pay each other
+        directly after matching. "Matched Value" below is informational (sum of accepted offer prices), not money held by the platform.
+      </p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="projects">Projects</button>
+      <button class="tab" data-tab="offers">Offers</button>
+      <button class="tab" data-tab="users">Users</button>
+    </div>
+
+    <div id="tab-projects"><div id="projects-list"></div></div>
+    <div id="tab-offers" style="display:none"><div id="offers-list"></div></div>
+    <div id="tab-users" style="display:none"><div id="users-list"></div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/common.js"></script>
+  <script>
+    let me = null;
+
+    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      ['projects', 'offers', 'users'].forEach(name => {
+        document.getElementById('tab-' + name).style.display = t.dataset.tab === name ? 'block' : 'none';
+      });
+    }));
+
+    async function loadStats() {
+      const [{ data: profiles }, { data: projects }, { data: offers }] = await Promise.all([
+        db.from('profiles').select('role'),
+        db.from('projects').select('status'),
+        db.from('offers').select('price, status')
+      ]);
+
+      document.getElementById('stat-users').textContent = (profiles || []).length;
+      document.getElementById('stat-clients').textContent = (profiles || []).filter(p => p.role === 'client').length;
+      document.getElementById('stat-devs').textContent = (profiles || []).filter(p => p.role === 'developer').length;
+      document.getElementById('stat-projects').textContent = (projects || []).length;
+      document.getElementById('stat-open').textContent = (projects || []).filter(p => p.status === 'open').length;
+
+      const gmv = (offers || []).filter(o => o.status === 'accepted').reduce((sum, o) => sum + o.price, 0);
+      document.getElementById('stat-gmv').textContent = peso(gmv);
+    }
+
+    async function loadProjects() {
+      const el = document.getElementById('projects-list');
+      el.innerHTML = '<div class="empty-state">Loading...</div>';
+      const { data: projects, error } = await db.from('projects')
+        .select('*, profiles:client_id(full_name, business_name, contact)')
+        .order('created_at', { ascending: false });
+      if (error) { el.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
+      if (!projects.length) { el.innerHTML = '<div class="empty-state">No projects yet.</div>'; return; }
+
+      el.innerHTML = '';
+      projects.forEach(p => {
+        const owner = p.profiles || {};
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(p.title) + '</h3>' + statusBadge(p.status) + '</div>' +
+          '<div class="item-meta">' + PROJECT_TYPES[p.project_type] + ' · ' + escapeHtml(p.category) +
+          ' · ' + peso(p.budget_min) + ' - ' + peso(p.budget_max) +
+          ' · by ' + escapeHtml(owner.business_name || owner.full_name || '?') +
+          ' (' + escapeHtml(owner.contact || '') + ') · ' + fmtDate(p.created_at) + '</div>' +
+          '<div style="margin-top:10px">' +
+          (p.status !== 'cancelled'
+            ? '<button class="btn btn-danger btn-sm" onclick="adminCancelProject(\'' + p.id + '\')">Cancel Project</button>'
+            : '') +
+          '</div>';
+        el.appendChild(card);
+      });
+    }
+
+    async function adminCancelProject(id) {
+      if (!confirm('Cancel this project? This is an admin override.')) return;
+      const { error } = await db.from('projects').update({ status: 'cancelled' }).eq('id', id);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadProjects();
+      loadStats();
+    }
+
+    async function loadOffers() {
+      const el = document.getElementById('offers-list');
+      el.innerHTML = '<div class="empty-state">Loading...</div>';
+      const { data: offers, error } = await db.from('offers')
+        .select('*, projects(title), profiles:developer_id(full_name, contact)')
+        .order('created_at', { ascending: false });
+      if (error) { el.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
+      if (!offers.length) { el.innerHTML = '<div class="empty-state">No offers yet.</div>'; return; }
+
+      el.innerHTML = '';
+      offers.forEach(o => {
+        const dev = o.profiles || {};
+        const proj = o.projects || {};
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(proj.title || '(deleted project)') + '</h3>' + statusBadge(o.status) + '</div>' +
+          '<div class="item-meta">' + peso(o.price) + ' · by ' + escapeHtml(dev.full_name || '?') +
+          ' (' + escapeHtml(dev.contact || '') + ') · ' + fmtDate(o.created_at) + '</div>' +
+          '<p style="margin-top:8px;font-size:14px">' + escapeHtml(o.message) + '</p>';
+        el.appendChild(card);
+      });
+    }
+
+    async function loadUsers() {
+      const el = document.getElementById('users-list');
+      el.innerHTML = '<div class="empty-state">Loading...</div>';
+      const { data: users, error } = await db.from('profiles')
+        .select('*').order('created_at', { ascending: false });
+      if (error) { el.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
+
+      el.innerHTML = '';
+      users.forEach(u => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(u.full_name) + (u.is_admin ? ' <span class="badge badge-accepted">Admin</span>' : '') + '</h3>' +
+          '<span class="badge badge-open">' + escapeHtml(u.role) + '</span></div>' +
+          '<div class="item-meta">' +
+          (u.business_name ? 'Business: ' + escapeHtml(u.business_name) + ' · ' : '') +
+          'Contact: ' + escapeHtml(u.contact) + ' · Joined ' + fmtDate(u.created_at) + '</div>' +
+          (u.skills && u.skills.length
+            ? '<div style="margin-top:6px">' + u.skills.map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') + '</div>'
+            : '');
+        el.appendChild(card);
+      });
+    }
+
+    (async () => {
+      me = await requireAdmin();
+      if (!me) return;
+      document.getElementById('welcome').textContent = 'Hi, ' + me.profile.full_name;
+      await Promise.all([loadStats(), loadProjects(), loadOffers(), loadUsers()]);
+    })();
+  </script>
+</body>
+</html>

@@ -27,6 +27,24 @@ async function logout() {
   window.location.href = 'index.html';
 }
 
+// Redirects to auth.html if not logged in, or to index.html if the logged-in
+// user is not flagged as an admin (profiles.is_admin — set via SQL, never
+// trust anything client-side for this check; RLS enforces it server-side too).
+async function requireAdmin() {
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) {
+    window.location.href = 'auth.html';
+    return null;
+  }
+  const { data: profile, error } = await db
+    .from('profiles').select('*').eq('id', user.id).single();
+  if (error || !profile || !profile.is_admin) {
+    window.location.href = 'index.html';
+    return null;
+  }
+  return { user, profile };
+}
+
 function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str == null ? '' : String(str);
