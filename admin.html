@@ -54,11 +54,13 @@
       <button class="tab active" data-tab="projects">Projects</button>
       <button class="tab" data-tab="offers">Offers</button>
       <button class="tab" data-tab="users">Users</button>
+      <button class="tab" data-tab="reviews">Reviews</button>
     </div>
 
     <div id="tab-projects"><div id="projects-list"></div></div>
     <div id="tab-offers" style="display:none"><div id="offers-list"></div></div>
     <div id="tab-users" style="display:none"><div id="users-list"></div></div>
+    <div id="tab-reviews" style="display:none"><div id="reviews-list"></div></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -70,7 +72,7 @@
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
-      ['projects', 'offers', 'users'].forEach(name => {
+      ['projects', 'offers', 'users', 'reviews'].forEach(name => {
         document.getElementById('tab-' + name).style.display = t.dataset.tab === name ? 'block' : 'none';
       });
     }));
@@ -180,6 +182,32 @@
       });
     }
 
+    async function loadReviews() {
+      const el = document.getElementById('reviews-list');
+      el.innerHTML = '<div class="empty-state">Loading...</div>';
+      const { data: reviews, error } = await db.from('reviews')
+        .select('*, projects(title), reviewer:reviewer_id(full_name), reviewee:reviewee_id(full_name)')
+        .order('created_at', { ascending: false });
+      if (error) { el.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
+      if (!reviews.length) { el.innerHTML = '<div class="empty-state">No reviews yet.</div>'; return; }
+
+      el.innerHTML = '';
+      reviews.forEach(r => {
+        const proj = r.projects || {};
+        const reviewer = r.reviewer || {};
+        const reviewee = r.reviewee || {};
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(reviewer.full_name || '?') + ' → ' + escapeHtml(reviewee.full_name || '?') + '</h3>' +
+          renderStars(r.rating, 1) + '</div>' +
+          '<div class="item-meta">Project: ' + escapeHtml(proj.title || '(deleted)') + ' · ' + fmtDate(r.created_at) + '</div>' +
+          (r.comment ? '<p style="margin-top:8px;font-size:14px">' + escapeHtml(r.comment) + '</p>' : '');
+        el.appendChild(card);
+      });
+    }
+
     function showLogin(errorMsg) {
       document.getElementById('login-view').style.display = 'block';
       document.getElementById('dashboard-view').style.display = 'none';
@@ -193,7 +221,7 @@
       document.getElementById('dashboard-view').style.display = 'block';
       document.getElementById('logout-btn').style.display = 'inline-block';
       document.getElementById('welcome').textContent = 'Hi, ' + profile.full_name;
-      await Promise.all([loadStats(), loadProjects(), loadOffers(), loadUsers()]);
+      await Promise.all([loadStats(), loadProjects(), loadOffers(), loadUsers(), loadReviews()]);
     }
 
     // Check current session on load — reuses it if already logged in as an admin.

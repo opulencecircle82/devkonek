@@ -59,6 +59,53 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
+// Renders "★★★★☆ 4.2 (12)" — or "No reviews yet" if count is 0.
+function renderStars(avg, count) {
+  if (!count) return '<span style="color:var(--muted);font-size:13px">No reviews yet</span>';
+  const rounded = Math.round(avg);
+  const full = '★'.repeat(rounded);
+  const empty = '☆'.repeat(5 - rounded);
+  return '<span style="color:#f59e0b;letter-spacing:1px">' + full + empty + '</span> ' +
+    '<span style="font-size:13px;color:var(--muted)">' + avg.toFixed(1) + ' (' + count + ')</span>';
+}
+
+// Builds a Map<profileId, {avg, count}> from a list of review rows (each with reviewee_id + rating).
+function aggregateRatings(reviews) {
+  const byUser = new Map();
+  (reviews || []).forEach(r => {
+    const entry = byUser.get(r.reviewee_id) || { sum: 0, count: 0 };
+    entry.sum += r.rating;
+    entry.count += 1;
+    byUser.set(r.reviewee_id, entry);
+  });
+  const result = new Map();
+  byUser.forEach((v, k) => result.set(k, { avg: v.sum / v.count, count: v.count }));
+  return result;
+}
+
+// Interactive 1-5 star picker. Returns the container element; call .getValue() to read the selection.
+function buildStarPicker(containerId, initialValue) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  el.style.cssText = 'font-size:28px;cursor:pointer;letter-spacing:4px;color:#d1d5db';
+  let value = initialValue || 0;
+  const spans = [];
+  for (let i = 1; i <= 5; i++) {
+    const s = document.createElement('span');
+    s.textContent = '★';
+    s.dataset.val = i;
+    s.addEventListener('click', () => { value = i; render(); });
+    el.appendChild(s);
+    spans.push(s);
+  }
+  function render() {
+    spans.forEach((s, idx) => { s.style.color = idx < value ? '#f59e0b' : '#d1d5db'; });
+  }
+  render();
+  el.getValue = () => value;
+  return el;
+}
+
 function statusBadge(status) {
   const labels = {
     open: 'Open', in_progress: 'In Progress', completed: 'Completed',

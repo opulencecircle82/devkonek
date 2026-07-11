@@ -140,15 +140,28 @@
       const listEl = document.getElementById('projects-list');
       listEl.innerHTML = '<div class="empty-state">Loading...</div>';
 
-      const { data: projects, error } = await db.from('projects')
-        .select('*, offers(*, profiles:developer_id(full_name, skills, contact, bio))')
-        .eq('client_id', me.user.id)
-        .order('created_at', { ascending: false });
+      const [{ data: projects, error }, { data: myReviews }] = await Promise.all([
+        db.from('projects')
+          .select('*, offers(*, profiles:developer_id(full_name, skills, contact, bio))')
+          .eq('client_id', me.user.id)
+          .order('created_at', { ascending: false }),
+        db.from('reviews').select('*').eq('reviewer_id', me.user.id)
+      ]);
+      const reviewsByProject = new Map((myReviews || []).map(r => [r.project_id, r]));
 
       if (error) { listEl.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
       if (!projects.length) {
         listEl.innerHTML = '<div class="empty-state">No projects yet. Post your first project!</div>';
         return;
+      }
+
+      // Fetch ratings for every developer who has made an offer, so clients can compare before accepting.
+      const devIds = new Set();
+      projects.forEach(p => (p.offers || []).forEach(o => devIds.add(o.developer_id)));
+      let devRatings = new Map();
+      if (devIds.size) {
+        const { data: devReviews } = await db.from('reviews').select('reviewee_id, rating').in('reviewee_id', Array.from(devIds));
+        devRatings = aggregateRatings((devReviews || []).map(r => ({ reviewee_id: r.reviewee_id, rating: r.rating })));
       }
 
       listEl.innerHTML = '';
@@ -163,21 +176,45 @@
         let offersHtml = '';
         if (accepted) {
           const dev = accepted.profiles || {};
+          const devRating = devRatings.get(accepted.developer_id);
           offersHtml =
-            '<div class="contact-box"><strong>✅ Matched with ' + escapeHtml(dev.full_name) + '</strong> — ' +
+            '<div class="contact-box"><strong>✅ Matched with ' + escapeHtml(dev.full_name) + '</strong> ' +
+            (devRating ? renderStars(devRating.avg, devRating.count) : '') + ' — ' +
             peso(accepted.price) + '<br>Contact: <strong>' + escapeHtml(dev.contact) + '</strong><br>' +
             'Skills: ' + (dev.skills || []).map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') +
             '</div>';
           if (proj.status === 'in_progress') {
             offersHtml += '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="completeProject(\'' + proj.id + '\')">Mark as Completed</button>';
           }
+          if (proj.status === 'completed') {
+            const existing = reviewsByProject.get(proj.id);
+            if (existing) {
+              offersHtml +=
+                '<div class="card" style="margin-top:10px;background:#f9fafb">' +
+                '<strong>Your review:</strong> ' + renderStars(existing.rating, 1) +
+                (existing.comment ? '<p style="margin-top:6px;font-size:14px">' + escapeHtml(existing.comment) + '</p>' : '') +
+                '</div>';
+            } else {
+              offersHtml +=
+                '<div style="margin-top:10px">' +
+                '<button class="btn btn-accent btn-sm" onclick="toggleReviewForm(\'' + proj.id + '\')">Leave a Review for ' + escapeHtml(dev.full_name) + '</button>' +
+                '<div id="review-form-' + proj.id + '" style="display:none;margin-top:10px">' +
+                '<div id="stars-' + proj.id + '"></div>' +
+                '<textarea id="review-comment-' + proj.id + '" placeholder="How was working with ' + escapeHtml(dev.full_name) + '?" style="margin-top:8px"></textarea>' +
+                '<button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="submitReview(\'' + proj.id + '\',\'' + accepted.developer_id + '\')">Submit Review</button>' +
+                '<div class="error-msg" id="review-err-' + proj.id + '"></div>' +
+                '</div></div>';
+            }
+          }
         } else if (pending.length) {
           offersHtml = '<h3 style="margin-top:14px">Offers (' + pending.length + ')</h3>';
           pending.forEach(o => {
             const dev = o.profiles || {};
+            const devRating = devRatings.get(o.developer_id);
             offersHtml +=
               '<div class="item-row"><div>' +
-              '<strong>' + escapeHtml(dev.full_name) + '</strong><br>' +
+              '<strong>' + escapeHtml(dev.full_name) + '</strong> ' +
+              (devRating ? renderStars(devRating.avg, devRating.count) : '<span style="color:var(--muted);font-size:12px">New developer</span>') + '<br>' +
               (dev.skills || []).map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') +
               '<div class="item-meta">' + escapeHtml(o.message) + '</div>' +
               '</div><div style="text-align:right">' +
@@ -200,7 +237,35 @@
           offersHtml;
 
         listEl.appendChild(card);
+
+        if (proj.status === 'completed' && accepted && !reviewsByProject.get(proj.id)) {
+          buildStarPicker('stars-' + proj.id, 5);
+        }
       });
+    }
+
+    function toggleReviewForm(projectId) {
+      const el = document.getElementById('review-form-' + projectId);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function submitReview(projectId, developerId) {
+      const errEl = document.getElementById('review-err-' + projectId);
+      errEl.textContent = '';
+      const starsEl = document.getElementById('stars-' + projectId);
+      const rating = starsEl.getValue();
+      if (!rating) { errEl.textContent = 'Please select a star rating.'; return; }
+      const comment = document.getElementById('review-comment-' + projectId).value.trim();
+
+      const { error } = await db.from('reviews').insert({
+        project_id: projectId,
+        reviewer_id: me.user.id,
+        reviewee_id: developerId,
+        rating: rating,
+        comment: comment
+      });
+      if (error) { errEl.textContent = error.message; return; }
+      loadProjects();
     }
 
     async function acceptOffer(projectId, offerId) {

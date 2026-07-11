@@ -31,6 +31,10 @@
         <div class="stat-value" id="stat-pending">0</div>
         <div class="stat-label">Pending Offers</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-rating" style="font-size:20px">-</div>
+        <div class="stat-label">Your Rating</div>
+      </div>
     </div>
 
     <div class="tabs">
@@ -192,6 +196,10 @@
         listEl.innerHTML = '<div class="empty-state">You haven\'t sent any offers yet. Go to Find Jobs!</div>';
         return;
       }
+
+      const { data: myReviews } = await db.from('reviews').select('*').eq('reviewer_id', me.user.id);
+      const reviewsByProject = new Map((myReviews || []).map(r => [r.project_id, r]));
+
       listEl.innerHTML = '';
       myOffers.forEach(o => {
         const proj = o.projects || {};
@@ -205,6 +213,27 @@
             '<div class="contact-box"><strong>🎉 Accepted!</strong> Client: ' +
             escapeHtml(client.business_name || client.full_name || '') +
             '<br>Contact them here: <strong>' + escapeHtml(client.contact || '') + '</strong></div>';
+
+          if (proj.status === 'completed') {
+            const existing = reviewsByProject.get(o.project_id);
+            if (existing) {
+              contactHtml +=
+                '<div class="card" style="margin-top:10px;background:#f9fafb">' +
+                '<strong>Your review:</strong> ' + renderStars(existing.rating, 1) +
+                (existing.comment ? '<p style="margin-top:6px;font-size:14px">' + escapeHtml(existing.comment) + '</p>' : '') +
+                '</div>';
+            } else {
+              contactHtml +=
+                '<div style="margin-top:10px">' +
+                '<button class="btn btn-accent btn-sm" onclick="toggleReviewForm(\'' + o.project_id + '\')">Leave a Review for ' + escapeHtml(client.business_name || client.full_name) + '</button>' +
+                '<div id="review-form-' + o.project_id + '" style="display:none;margin-top:10px">' +
+                '<div id="stars-' + o.project_id + '"></div>' +
+                '<textarea id="review-comment-' + o.project_id + '" placeholder="How was working with this client?" style="margin-top:8px"></textarea>' +
+                '<button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="submitReview(\'' + o.project_id + '\',\'' + proj.client_id + '\')">Submit Review</button>' +
+                '<div class="error-msg" id="review-err-' + o.project_id + '"></div>' +
+                '</div></div>';
+            }
+          }
         }
 
         card.innerHTML =
@@ -216,7 +245,43 @@
           contactHtml;
 
         listEl.appendChild(card);
+
+        if (proj.status === 'completed' && o.status === 'accepted' && !reviewsByProject.get(o.project_id)) {
+          buildStarPicker('stars-' + o.project_id, 5);
+        }
       });
+    }
+
+    function toggleReviewForm(projectId) {
+      const el = document.getElementById('review-form-' + projectId);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function submitReview(projectId, clientId) {
+      const errEl = document.getElementById('review-err-' + projectId);
+      errEl.textContent = '';
+      const starsEl = document.getElementById('stars-' + projectId);
+      const rating = starsEl.getValue();
+      if (!rating) { errEl.textContent = 'Please select a star rating.'; return; }
+      const comment = document.getElementById('review-comment-' + projectId).value.trim();
+
+      const { error } = await db.from('reviews').insert({
+        project_id: projectId,
+        reviewer_id: me.user.id,
+        reviewee_id: clientId,
+        rating: rating,
+        comment: comment
+      });
+      if (error) { errEl.textContent = error.message; return; }
+      loadOffers();
+    }
+
+    async function loadMyRating() {
+      const { data } = await db.from('reviews').select('rating').eq('reviewee_id', me.user.id);
+      const el = document.getElementById('stat-rating');
+      if (!data || !data.length) { el.textContent = 'No reviews yet'; el.style.fontSize = '14px'; return; }
+      const avg = data.reduce((s, r) => s + r.rating, 0) / data.length;
+      el.innerHTML = renderStars(avg, data.length);
     }
 
     async function loadEarnings() {
@@ -254,6 +319,7 @@
       document.getElementById('welcome').textContent = 'Hi, ' + me.profile.full_name;
       await refreshMyOffers();
       loadJobs();
+      loadMyRating();
     })();
   </script>
 </body>
