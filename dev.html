@@ -41,6 +41,7 @@
       <button class="tab active" data-tab="jobs">Find Jobs</button>
       <button class="tab" data-tab="offers">My Offers</button>
       <button class="tab" data-tab="earnings">Earnings</button>
+      <button class="tab" data-tab="payment">Payment Info</button>
     </div>
 
     <div id="tab-jobs">
@@ -63,6 +64,28 @@
     <div id="tab-earnings" style="display:none">
       <div id="earnings-list"></div>
     </div>
+
+    <!-- PAYMENT INFO -->
+    <div id="tab-payment" style="display:none">
+      <div class="card">
+        <h2>How clients will pay you</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+          This is shown to a client only after they accept your offer. For your safety, never enter a full
+          bank account number here — share that directly with the client once matched.
+        </p>
+        <label style="margin-top:0">PayPal Email (recommended for international/overseas clients)</label>
+        <input type="email" id="pay-paypal" placeholder="you@example.com">
+        <label>GCash Number</label>
+        <input type="text" id="pay-gcash" placeholder="09XXXXXXXXX">
+        <label>Bank Name</label>
+        <input type="text" id="pay-bank-name" placeholder="e.g. BDO, BPI, Metrobank">
+        <label>Account Name</label>
+        <input type="text" id="pay-bank-account" placeholder="Name on the account">
+        <button class="btn btn-primary" style="margin-top:12px" onclick="savePaymentInfo('pay', me.user.id, 'pay-error', 'pay-ok')">Save Payment Info</button>
+        <div class="error-msg" id="pay-error"></div>
+        <div class="success-msg" id="pay-ok" style="display:none">Saved!</div>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -75,12 +98,13 @@
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
-      ['jobs', 'offers', 'earnings'].forEach(name => {
+      ['jobs', 'offers', 'earnings', 'payment'].forEach(name => {
         document.getElementById('tab-' + name).style.display = t.dataset.tab === name ? 'block' : 'none';
       });
       if (t.dataset.tab === 'jobs') loadJobs();
       if (t.dataset.tab === 'offers') loadOffers();
       if (t.dataset.tab === 'earnings') loadEarnings();
+      if (t.dataset.tab === 'payment') fillPaymentForm('pay', me.profile);
     }));
 
     document.getElementById('job-search').addEventListener('input', () => loadJobs());
@@ -88,7 +112,7 @@
 
     async function refreshMyOffers() {
       const { data } = await db.from('offers')
-        .select('*, projects(id, title, status, project_type, category, client_id, profiles:client_id(full_name, business_name, contact))')
+        .select('*, projects(id, title, status, project_type, category, client_id, profiles:client_id(full_name, business_name, contact, paypal_email, gcash_number, bank_name, bank_account_name))')
         .eq('developer_id', me.user.id)
         .order('created_at', { ascending: false });
       myOffers = data || [];
@@ -222,7 +246,9 @@
           contactHtml =
             '<div class="contact-box"><strong>🎉 Accepted!</strong> Client: ' +
             escapeHtml(client.business_name || client.full_name || '') +
-            '<br>Contact them here: <strong>' + escapeHtml(client.contact || '') + '</strong></div>';
+            '<br>Contact them here: <strong>' + escapeHtml(client.contact || '') + '</strong>' +
+            '<div style="margin-top:6px"><strong>They will pay you via:</strong>' + paymentInfoHtml(client) + '</div>' +
+            '</div>';
 
           if (proj.status !== 'cancelled') {
             contactHtml += reportFormHtml('dev-' + o.project_id, o.project_id, proj.client_id, client.business_name || client.full_name || 'this client');

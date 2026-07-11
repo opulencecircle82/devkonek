@@ -21,6 +21,7 @@
     <div class="tabs">
       <button class="tab active" data-tab="post">Post a Project</button>
       <button class="tab" data-tab="projects">My Projects</button>
+      <button class="tab" data-tab="payment">Payment Info</button>
     </div>
 
     <!-- POST A PROJECT -->
@@ -90,6 +91,28 @@
     <div id="tab-projects" style="display:none">
       <div id="projects-list"></div>
     </div>
+
+    <!-- PAYMENT INFO -->
+    <div id="tab-payment" style="display:none">
+      <div class="card">
+        <h2>How you'll pay a matched developer</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
+          This is shown to a developer only after you accept their offer. For your safety, never enter a full
+          bank account number here — share that directly with the developer once matched.
+        </p>
+        <label style="margin-top:0">PayPal Email (best for international/overseas developers)</label>
+        <input type="email" id="pay-paypal" placeholder="you@example.com">
+        <label>GCash Number</label>
+        <input type="text" id="pay-gcash" placeholder="09XXXXXXXXX">
+        <label>Bank Name</label>
+        <input type="text" id="pay-bank-name" placeholder="e.g. BDO, BPI, Metrobank">
+        <label>Account Name</label>
+        <input type="text" id="pay-bank-account" placeholder="Name on the account">
+        <button class="btn btn-primary" style="margin-top:12px" onclick="savePaymentInfo('pay', me.user.id, 'pay-error', 'pay-ok')">Save Payment Info</button>
+        <div class="error-msg" id="pay-error"></div>
+        <div class="success-msg" id="pay-ok" style="display:none">Saved!</div>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -104,7 +127,9 @@
       t.classList.add('active');
       document.getElementById('tab-post').style.display = t.dataset.tab === 'post' ? 'block' : 'none';
       document.getElementById('tab-projects').style.display = t.dataset.tab === 'projects' ? 'block' : 'none';
+      document.getElementById('tab-payment').style.display = t.dataset.tab === 'payment' ? 'block' : 'none';
       if (t.dataset.tab === 'projects') loadProjects();
+      if (t.dataset.tab === 'payment') fillPaymentForm('pay', me.profile);
     }));
 
     // Populate selects with DOM API
@@ -193,7 +218,7 @@
 
       const [{ data: projects, error }, { data: myReviews }] = await Promise.all([
         db.from('projects')
-          .select('*, offers(*, profiles:developer_id(full_name, skills, contact, bio))')
+          .select('*, offers(*, profiles:developer_id(full_name, skills, contact, bio, paypal_email, gcash_number, bank_name, bank_account_name))')
           .eq('client_id', me.user.id)
           .order('created_at', { ascending: false }),
         db.from('reviews').select('*').eq('reviewer_id', me.user.id)
@@ -233,6 +258,7 @@
             (devRating ? renderStars(devRating.avg, devRating.count) : '') + ' — ' +
             peso(accepted.price) + '<br>Contact: <strong>' + escapeHtml(dev.contact) + '</strong><br>' +
             'Skills: ' + (dev.skills || []).map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') +
+            '<div style="margin-top:6px"><strong>Pay ' + escapeHtml(dev.full_name) + ' via:</strong>' + paymentInfoHtml(dev) + '</div>' +
             '</div>';
           if (proj.status === 'in_progress') {
             offersHtml += '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="completeProject(\'' + proj.id + '\')">Mark as Completed</button>';

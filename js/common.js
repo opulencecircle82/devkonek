@@ -272,3 +272,44 @@ function rankOffers(offers, budgetMin, budgetMax, ratingsMap) {
   scored.sort((a, b) => b.score - a.score);
   return scored.map(s => s.offer);
 }
+
+// ============ PAYMENT INFO ============
+// Deliberately no full bank account number — safe identifiers only.
+// Full account numbers should be exchanged directly between matched parties.
+
+function paymentInfoHtml(profile) {
+  const rows = [];
+  if (profile.paypal_email) rows.push('PayPal (international): <strong>' + escapeHtml(profile.paypal_email) + '</strong>');
+  if (profile.gcash_number) rows.push('GCash: <strong>' + escapeHtml(profile.gcash_number) + '</strong>');
+  if (profile.bank_name) {
+    rows.push('Bank: <strong>' + escapeHtml(profile.bank_name) +
+      (profile.bank_account_name ? ' — ' + escapeHtml(profile.bank_account_name) : '') + '</strong>');
+  }
+  if (!rows.length) return '<div style="font-size:13px;color:var(--muted);margin-top:6px">No payment info added yet.</div>';
+  return '<div style="margin-top:6px;font-size:14px;line-height:1.6">' + rows.join('<br>') + '</div>';
+}
+
+// Fills a payment-info edit form (4 inputs with the given id prefix) from a profile row.
+function fillPaymentForm(prefix, profile) {
+  document.getElementById(prefix + '-paypal').value = profile.paypal_email || '';
+  document.getElementById(prefix + '-gcash').value = profile.gcash_number || '';
+  document.getElementById(prefix + '-bank-name').value = profile.bank_name || '';
+  document.getElementById(prefix + '-bank-account').value = profile.bank_account_name || '';
+}
+
+async function savePaymentInfo(prefix, userId, errElId, okElId) {
+  const errEl = document.getElementById(errElId);
+  const okEl = document.getElementById(okElId);
+  errEl.textContent = '';
+  okEl.style.display = 'none';
+
+  const { error } = await db.from('profiles').update({
+    paypal_email: document.getElementById(prefix + '-paypal').value.trim() || null,
+    gcash_number: document.getElementById(prefix + '-gcash').value.trim() || null,
+    bank_name: document.getElementById(prefix + '-bank-name').value.trim() || null,
+    bank_account_name: document.getElementById(prefix + '-bank-account').value.trim() || null
+  }).eq('id', userId);
+
+  if (error) { errEl.textContent = error.message; return; }
+  okEl.style.display = 'block';
+}
