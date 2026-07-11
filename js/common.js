@@ -200,3 +200,75 @@ async function submitReport(projectId, reportedId, formId) {
   document.getElementById('report-form-' + formId).querySelectorAll('select, textarea, button').forEach(el => el.disabled = true);
   okEl.style.display = 'block';
 }
+
+// ============ PRICE ESTIMATOR ============
+// Rule-based estimate — no external AI needed. Base price per category x type
+// multiplier, plus a flat range per selected feature.
+
+const ESTIMATOR_BASE = {
+  'E-commerce / Online Store': { min: 15000, max: 30000, weeks: 3 },
+  'POS System': { min: 15000, max: 35000, weeks: 4 },
+  'Booking / Reservation': { min: 10000, max: 25000, weeks: 3 },
+  'Food Delivery': { min: 20000, max: 40000, weeks: 4 },
+  'Portfolio / Company Website': { min: 5000, max: 15000, weeks: 2 },
+  'Inventory Management': { min: 15000, max: 30000, weeks: 3 },
+  'Landing Page': { min: 3000, max: 8000, weeks: 1 },
+  'School / LMS': { min: 25000, max: 60000, weeks: 6 },
+  'Other': { min: 8000, max: 20000, weeks: 2 }
+};
+
+const ESTIMATOR_TYPE_MULTIPLIER = { website: 1, mobile_app: 1.6, both: 2.2 };
+
+const ESTIMATOR_FEATURES = [
+  { key: 'auth', label: 'User Login / Accounts', min: 3000, max: 5000, weeks: 0.5 },
+  { key: 'payment', label: 'Payment Gateway (GCash/Card)', min: 8000, max: 15000, weeks: 1 },
+  { key: 'admin', label: 'Admin Dashboard', min: 5000, max: 10000, weeks: 1 },
+  { key: 'push', label: 'Push Notifications', min: 3000, max: 6000, weeks: 0.5 },
+  { key: 'chat', label: 'Real-time Chat', min: 5000, max: 10000, weeks: 1 },
+  { key: 'multilang', label: 'Multi-language Support', min: 3000, max: 6000, weeks: 0.5 },
+  { key: 'api', label: '3rd-Party API Integration', min: 4000, max: 8000, weeks: 0.5 },
+  { key: 'upload', label: 'File / Image Upload', min: 2000, max: 4000, weeks: 0.5 },
+  { key: 'search', label: 'Search & Filters', min: 2000, max: 4000, weeks: 0.5 },
+  { key: 'analytics', label: 'Analytics / Reports', min: 4000, max: 8000, weeks: 1 },
+  { key: 'offline', label: 'Offline Mode', min: 5000, max: 10000, weeks: 1 },
+  { key: 'social', label: 'Social Media Login', min: 2000, max: 4000, weeks: 0.5 }
+];
+
+function estimateProject(category, type, selectedFeatureKeys) {
+  const base = ESTIMATOR_BASE[category] || ESTIMATOR_BASE['Other'];
+  const mult = ESTIMATOR_TYPE_MULTIPLIER[type] || 1;
+  let min = base.min * mult;
+  let max = base.max * mult;
+  let weeks = base.weeks;
+  ESTIMATOR_FEATURES.forEach(f => {
+    if (selectedFeatureKeys.includes(f.key)) {
+      min += f.min;
+      max += f.max;
+      weeks += f.weeks;
+    }
+  });
+  return { min: Math.round(min / 500) * 500, max: Math.round(max / 500) * 500, weeks: Math.ceil(weeks) };
+}
+
+// ============ SMART BID RANKING ============
+// Composite score (0-100): 50% developer rating, 20% track record (review count,
+// caps at 10), 30% price competitiveness within the client's stated budget.
+// New developers (no reviews) can still rank #1 by pricing competitively.
+
+function rankOffers(offers, budgetMin, budgetMax, ratingsMap) {
+  const scored = offers.map(o => {
+    const rating = ratingsMap.get(o.developer_id);
+    const ratingScore = rating ? (rating.avg / 5) * 50 : 0;
+    const trackScore = rating ? Math.min(rating.count / 10, 1) * 20 : 0;
+
+    let priceScore = 15; // neutral default if budget range is degenerate (min === max)
+    if (budgetMax > budgetMin) {
+      const normalized = (o.price - budgetMin) / (budgetMax - budgetMin);
+      priceScore = (1 - Math.min(Math.max(normalized, 0), 1)) * 30;
+    }
+
+    return { offer: o, score: ratingScore + trackScore + priceScore };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.map(s => s.offer);
+}

@@ -46,6 +46,16 @@
             </div>
           </div>
 
+          <div class="card" style="background:#f0f9ff;border-color:#bae6fd;margin:12px 0">
+            <button type="button" class="btn btn-outline btn-sm" onclick="toggleEstimator()">🧮 Not sure about your budget? Get a Price Estimate</button>
+            <div id="estimator-box" style="display:none;margin-top:12px">
+              <label style="margin-top:0">Which features do you need? (check all that apply)</label>
+              <div id="estimator-features" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+              <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="calculateEstimate()">Calculate Estimate</button>
+              <div id="estimator-result" style="display:none;margin-top:10px" class="contact-box"></div>
+            </div>
+          </div>
+
           <label>Budget (price guide — pick the closest, or set your own)</label>
           <select id="p-budget-preset"></select>
           <div class="form-row" style="margin-top:8px">
@@ -111,6 +121,47 @@
       }
     });
     presetSel.dispatchEvent(new Event('change'));
+
+    // Price estimator
+    const estimatorFeaturesEl = document.getElementById('estimator-features');
+    ESTIMATOR_FEATURES.forEach(f => {
+      const lbl = document.createElement('label');
+      lbl.style.cssText = 'display:flex;align-items:center;gap:4px;font-weight:400;font-size:13px;' +
+        'border:1px solid var(--border);border-radius:999px;padding:4px 10px;cursor:pointer;margin:0;background:#fff';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = f.key;
+      cb.style.width = 'auto';
+      lbl.appendChild(cb);
+      lbl.appendChild(document.createTextNode(f.label));
+      estimatorFeaturesEl.appendChild(lbl);
+    });
+
+    function toggleEstimator() {
+      const box = document.getElementById('estimator-box');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function calculateEstimate() {
+      const type = document.getElementById('p-type').value;
+      const category = catSel.value;
+      const selected = Array.from(estimatorFeaturesEl.querySelectorAll('input:checked')).map(cb => cb.value);
+      const est = estimateProject(category, type, selected);
+
+      const resultEl = document.getElementById('estimator-result');
+      resultEl.style.display = 'block';
+      resultEl.innerHTML =
+        '<strong>Estimated: ' + peso(est.min) + ' - ' + peso(est.max) + '</strong><br>' +
+        'Typical timeline: ~' + est.weeks + ' week' + (est.weeks > 1 ? 's' : '') + '<br>' +
+        '<button type="button" class="btn btn-primary btn-sm" style="margin-top:8px" onclick="useEstimate(' + est.min + ',' + est.max + ')">Use This Estimate</button>';
+    }
+
+    function useEstimate(min, max) {
+      document.getElementById('p-budget-min').value = min;
+      document.getElementById('p-budget-max').value = max;
+      const customIndex = BUDGET_PRESETS.length - 1;
+      presetSel.value = customIndex;
+    }
 
     document.getElementById('post-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -210,12 +261,15 @@
             }
           }
         } else if (pending.length) {
-          offersHtml = '<h3 style="margin-top:14px">Offers (' + pending.length + ')</h3>';
-          pending.forEach(o => {
+          const ranked = rankOffers(pending, proj.budget_min, proj.budget_max, devRatings);
+          offersHtml = '<h3 style="margin-top:14px">Offers (' + pending.length + ')</h3>' +
+            (pending.length > 1 ? '<div class="item-meta" style="margin-bottom:6px">Sorted by DevKonek Smart Match — rating, track record, and price fit</div>' : '');
+          ranked.forEach((o, idx) => {
             const dev = o.profiles || {};
             const devRating = devRatings.get(o.developer_id);
             offersHtml +=
               '<div class="item-row"><div>' +
+              (idx === 0 && pending.length > 1 ? '<span class="badge badge-accepted">🏆 Top Pick</span> ' : '') +
               '<strong>' + escapeHtml(dev.full_name) + '</strong> ' +
               (devRating ? renderStars(devRating.avg, devRating.count) : '<span style="color:var(--muted);font-size:12px">New developer</span>') + '<br>' +
               (dev.skills || []).map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') +
