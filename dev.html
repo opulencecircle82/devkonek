@@ -206,7 +206,8 @@
           ' · by ' + escapeHtml(client.business_name || client.full_name || 'Client') + ' ' +
           (clientRating ? renderStars(clientRating.avg, clientRating.count) : '<span style="color:var(--muted);font-size:12px">New client — no reviews yet, ask for a deposit before starting</span>') +
           ' · ' + fmtDate(job.created_at) + '</div>' +
-          '<p style="margin:8px 0;font-size:14px">' + escapeHtml(job.details) + '</p>' +
+          '<button type="button" class="btn btn-outline btn-sm" style="margin-top:8px" onclick="toggleJobDetails(\'' + job.id + '\')">👁 View: What the Client Wants</button>' +
+          '<div id="job-details-' + job.id + '" style="display:none;margin-top:8px;font-size:14px;white-space:pre-wrap">' + escapeHtml(job.details) + '</div>' +
           actionHtml;
 
         listEl.appendChild(card);
@@ -215,6 +216,11 @@
 
     function toggleOfferForm(jobId) {
       const el = document.getElementById('offer-form-' + jobId);
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleJobDetails(jobId) {
+      const el = document.getElementById('job-details-' + jobId);
       el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
 

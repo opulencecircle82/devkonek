@@ -349,7 +349,7 @@
           '<div class="item-meta">' + PROJECT_TYPES[proj.project_type] + ' · ' + escapeHtml(proj.category) +
           ' · Budget: ' + peso(proj.budget_min) + ' - ' + peso(proj.budget_max) +
           ' · ' + escapeHtml(proj.timeline || '') + ' · Posted ' + fmtDate(proj.created_at) + '</div>' +
-          '<p style="margin-top:8px;font-size:14px">' + escapeHtml(proj.details) + '</p>' +
+          '<p style="margin-top:8px;font-size:14px;white-space:pre-wrap">' + escapeHtml(proj.details) + '</p>' +
           offersHtml;
 
         listEl.appendChild(card);
