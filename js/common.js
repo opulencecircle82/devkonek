@@ -178,7 +178,7 @@ const CATEGORY_SUGGESTIONS = {
     { label: 'Photo/portfolio gallery', desc: 'A page to browse photos of your past work.' },
     { label: 'Easy content editing (admin panel)', desc: 'You can change the text/photos on your website without coding.' },
     { label: 'Blog/News section', desc: 'You can post news/articles visitors can read.' },
-    { label: 'Filipino and English versions', desc: 'The website language can be switched.' }
+    { label: 'Multiple language versions', desc: 'The website language can be switched.' }
   ],
   'Inventory Management': [
     { label: 'Barcode scanning', desc: 'Just scan the barcode to instantly update stock.' },
