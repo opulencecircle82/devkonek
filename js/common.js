@@ -245,7 +245,7 @@ function reportFormHtml(formId, projectId, reportedId, reportedName) {
   return (
     '<div style="margin-top:8px">' +
     '<button type="button" class="btn btn-outline btn-sm" onclick="toggleReportForm(\'' + formId + '\')">Report ' + escapeHtml(reportedName) + '</button>' +
-    '<div id="report-form-' + formId + '" style="display:none;margin-top:8px;padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px">' +
+    '<div id="report-form-' + formId + '" class="box-danger" style="display:none;margin-top:8px;padding:12px;border-radius:8px">' +
     '<label style="margin-top:0">Reason</label>' +
     '<select id="report-reason-' + formId + '">' + options + '</select>' +
     '<label>Details (optional)</label>' +

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DevKonek — Developer Dashboard</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/theme.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -12,6 +13,7 @@
       <a href="index.html" class="logo">Dev<span>Konek</span></a>
       <nav>
         <span id="welcome" style="font-size:14px;color:var(--muted)"></span>
+        <button class="btn btn-outline btn-sm" id="theme-toggle-btn" onclick="toggleTheme()"></button>
         <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
       </nav>
     </div>
@@ -281,7 +283,7 @@
             const existing = reviewsByProject.get(o.project_id);
             if (existing) {
               contactHtml +=
-                '<div class="card" style="margin-top:10px;background:#f9fafb">' +
+                '<div class="card box-subtle" style="margin-top:10px">' +
                 '<strong>Your review:</strong> ' + renderStars(existing.rating, 1) +
                 (existing.comment ? '<p style="margin-top:6px;font-size:14px">' + escapeHtml(existing.comment) + '</p>' : '') +
                 '</div>';

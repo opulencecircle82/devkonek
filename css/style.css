@@ -13,6 +13,19 @@
   --red: #dc2626;
 }
 
+:root[data-theme="dark"] {
+  --primary: #5b8def;
+  --primary-dark: #7ea5f2;
+  --accent: #fbbf24;
+  --bg: #12141c;
+  --card: #1b1e29;
+  --text: #e5e7eb;
+  --muted: #9199a8;
+  --border: #2e3340;
+  --green: #34d399;
+  --red: #f87171;
+}
+
 body {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: var(--bg);
@@ -76,7 +89,8 @@ a { color: var(--primary); text-decoration: none; }
 label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 4px; }
 input, select, textarea {
   width: 100%; padding: 10px 12px; border: 1px solid var(--border);
-  border-radius: 8px; font-size: 15px; font-family: inherit; background: #fff;
+  border-radius: 8px; font-size: 15px; font-family: inherit;
+  background: var(--card); color: var(--text);
 }
 textarea { min-height: 100px; resize: vertical; }
 input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); border-color: transparent; }
@@ -134,8 +148,18 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--primary); b
 
 .contact-box {
   background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px;
-  padding: 12px; margin-top: 10px; font-size: 14px;
+  padding: 12px; margin-top: 10px; font-size: 14px; color: #064e3b;
 }
+:root[data-theme="dark"] .contact-box {
+  background: #0f2e22; border-color: #1f5f43; color: #d1fae5;
+}
+
+.box-info { background: #f0f9ff; border: 1px solid #bae6fd; }
+.box-danger { background: #fef2f2; border: 1px solid #fecaca; }
+.box-subtle { background: #f9fafb; border: 1px solid var(--border); }
+:root[data-theme="dark"] .box-info { background: #10243d; border-color: #1e4a6e; }
+:root[data-theme="dark"] .box-danger { background: #33161a; border-color: #6b2530; }
+:root[data-theme="dark"] .box-subtle { background: #21252f; border-color: var(--border); }
 
 .search-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
 .search-bar input { flex: 1; min-width: 200px; }
