@@ -119,9 +119,13 @@
       skillsWrap.appendChild(lbl);
     });
 
-    async function goToDashboard(userId) {
-      const { data: profile } = await db.from('profiles').select('role').eq('id', userId).single();
-      window.location.href = profile && profile.role === 'developer' ? 'dev.html' : 'client.html';
+    async function goToDashboard(userId, errEl) {
+      const { data: profile, error } = await db.from('profiles').select('role').eq('id', userId).single();
+      if (error || !profile) {
+        errEl.textContent = 'Could not load your profile: ' + (error ? error.message : 'not found') + '. Please try again or contact support.';
+        return;
+      }
+      window.location.href = profile.role === 'developer' ? 'dev.html' : 'client.html';
     }
 
     loginForm.addEventListener('submit', async (e) => {
@@ -133,7 +137,7 @@
         password: document.getElementById('login-password').value
       });
       if (error) { errEl.textContent = error.message; return; }
-      await goToDashboard(data.user.id);
+      await goToDashboard(data.user.id, errEl);
     });
 
     signupForm.addEventListener('submit', async (e) => {

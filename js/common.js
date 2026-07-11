@@ -12,6 +12,7 @@ async function requireAuth(requiredRole) {
   const { data: profile, error } = await db
     .from('profiles').select('*').eq('id', user.id).single();
   if (error || !profile) {
+    if (error) console.error('requireAuth: profile fetch failed —', error.message, error);
     window.location.href = 'auth.html';
     return null;
   }
