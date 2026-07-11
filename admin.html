@@ -165,6 +165,7 @@
           '<h3>' + escapeHtml(proj.title || '(deleted project)') + '</h3>' + statusBadge(o.status) + '</div>' +
           '<div class="item-meta">' + peso(o.price) + ' · by ' + escapeHtml(dev.full_name || '?') +
           ' (' + escapeHtml(dev.contact || '') + ') · ' + fmtDate(o.created_at) + '</div>' +
+          (o.demo_link ? '<div style="margin-top:6px"><a href="' + escapeHtml(o.demo_link) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">🔗 View Demo</a></div>' : '') +
           '<p style="margin-top:8px;font-size:14px">' + escapeHtml(o.message) + '</p>';
         el.appendChild(card);
       });

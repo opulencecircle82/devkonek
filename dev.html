@@ -39,7 +39,7 @@
 
     <div class="tabs">
       <button class="tab active" data-tab="jobs">Find Jobs</button>
-      <button class="tab" data-tab="offers">My Offers</button>
+      <button class="tab" data-tab="offers">My Entries</button>
       <button class="tab" data-tab="earnings">Earnings</button>
       <button class="tab" data-tab="payment">Payment Info</button>
     </div>
@@ -184,14 +184,16 @@
 
         const alreadyOffered = offeredProjectIds.has(job.id);
         const actionHtml = alreadyOffered
-          ? '<span class="badge badge-pending">Offer already sent</span>'
-          : '<button class="btn btn-accent btn-sm" onclick="toggleOfferForm(\'' + job.id + '\')">Make an Offer</button>' +
+          ? '<span class="badge badge-pending">Entry submitted</span>'
+          : '<button class="btn btn-accent btn-sm" onclick="toggleOfferForm(\'' + job.id + '\')">Submit Entry</button>' +
             '<div id="offer-form-' + job.id + '" style="display:none;margin-top:10px">' +
-            '<label style="margin-top:0">Your Price (₱)</label>' +
+            '<label style="margin-top:0">Demo Link (build it, then share a working link the client can try)</label>' +
+            '<input type="url" id="offer-link-' + job.id + '" placeholder="https://your-demo-url.com">' +
+            '<label>Your Price (₱)</label>' +
             '<input type="number" id="offer-price-' + job.id + '" min="1" placeholder="e.g. 15000">' +
-            '<label>Your Pitch (why should they pick you?)</label>' +
-            '<textarea id="offer-msg-' + job.id + '" placeholder="e.g. I have built 3 e-commerce sites..."></textarea>' +
-            '<button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="sendOffer(\'' + job.id + '\')">Send Offer</button>' +
+            '<label>Pitch (describe what you built)</label>' +
+            '<textarea id="offer-msg-' + job.id + '" placeholder="e.g. Built with React + Supabase, includes..."></textarea>' +
+            '<button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="sendOffer(\'' + job.id + '\')">Submit Entry</button>' +
             '<div class="error-msg" id="offer-err-' + job.id + '"></div>' +
             '</div>';
 
@@ -219,16 +221,19 @@
     async function sendOffer(jobId) {
       const errEl = document.getElementById('offer-err-' + jobId);
       errEl.textContent = '';
+      const demoLink = document.getElementById('offer-link-' + jobId).value.trim();
       const price = Number(document.getElementById('offer-price-' + jobId).value);
       const message = document.getElementById('offer-msg-' + jobId).value.trim();
+      if (!/^https?:\/\/.+/i.test(demoLink)) { errEl.textContent = 'Enter a valid demo link (starting with http:// or https://).'; return; }
       if (!price || price < 1) { errEl.textContent = 'Enter a valid price.'; return; }
-      if (!message) { errEl.textContent = 'Write a short pitch.'; return; }
+      if (!message) { errEl.textContent = 'Describe what you built.'; return; }
 
       const { error } = await db.from('offers').insert({
         project_id: jobId,
         developer_id: me.user.id,
         price: price,
-        message: message
+        message: message,
+        demo_link: demoLink
       });
       if (error) { errEl.textContent = error.message; return; }
       await refreshMyOffers();
@@ -239,7 +244,7 @@
       await refreshMyOffers();
       const listEl = document.getElementById('offers-list');
       if (!myOffers.length) {
-        listEl.innerHTML = '<div class="empty-state">You haven\'t sent any offers yet. Go to Find Jobs!</div>';
+        listEl.innerHTML = '<div class="empty-state">You haven\'t submitted any entries yet. Go to Find Jobs!</div>';
         return;
       }
 
@@ -291,8 +296,9 @@
         card.innerHTML =
           '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">' +
           '<h3>' + escapeHtml(proj.title || '(deleted project)') + '</h3>' + statusBadge(o.status) + '</div>' +
-          '<div class="item-meta">Your offer: <strong>' + peso(o.price) + '</strong> · Sent ' + fmtDate(o.created_at) +
+          '<div class="item-meta">Your entry: <strong>' + peso(o.price) + '</strong> · Submitted ' + fmtDate(o.created_at) +
           (proj.status ? ' · Project: ' + statusBadge(proj.status) : '') + '</div>' +
+          (o.demo_link ? '<div style="margin-top:6px"><a href="' + escapeHtml(o.demo_link) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">🔗 View My Demo</a></div>' : '') +
           '<p style="margin-top:8px;font-size:14px">' + escapeHtml(o.message) + '</p>' +
           contactHtml;
 

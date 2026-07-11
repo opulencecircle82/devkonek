@@ -293,18 +293,21 @@
           }
         } else if (pending.length) {
           const ranked = rankOffers(pending, proj.budget_min, proj.budget_max, devRatings);
-          offersHtml = '<h3 style="margin-top:14px">Offers (' + pending.length + ')</h3>' +
-            (pending.length > 1 ? '<div class="item-meta" style="margin-bottom:6px">Sorted by DevKonek Smart Match — rating, track record, and price fit</div>' : '');
+          offersHtml = '<h3 style="margin-top:14px">Entries (' + pending.length + ')</h3>' +
+            '<div class="item-meta" style="margin-bottom:6px">Try each demo, then pick a winner. Final source code/files are shared by the developer after you complete payment.</div>';
           ranked.forEach((o, idx) => {
             const dev = o.profiles || {};
             const devRating = devRatings.get(o.developer_id);
+            const matchPct = computeMatchScore(o, proj.budget_min, proj.budget_max, devRatings);
             offersHtml +=
               '<div class="item-row"><div>' +
               (idx === 0 && pending.length > 1 ? '<span class="badge badge-accepted">🏆 Top Pick</span> ' : '') +
+              '<span class="badge badge-open">' + matchPct + '% match</span> ' +
               '<strong>' + escapeHtml(dev.full_name) + '</strong> ' +
               (devRating ? renderStars(devRating.avg, devRating.count) : '<span style="color:var(--muted);font-size:12px">New developer</span>') + '<br>' +
               (dev.skills || []).map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') +
               '<div class="item-meta">' + escapeHtml(o.message) + '</div>' +
+              (o.demo_link ? '<div style="margin-top:6px"><a href="' + escapeHtml(o.demo_link) + '" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">🔗 Try the Demo</a></div>' : '') +
               '</div><div style="text-align:right">' +
               '<div class="price-tag">' + peso(o.price) + '</div>' +
               '<button class="btn btn-primary btn-sm" style="margin-top:6px" onclick="acceptOffer(\'' + proj.id + '\',\'' + o.id + '\')">Accept</button> ' +
@@ -312,7 +315,7 @@
               '</div></div>';
           });
         } else if (proj.status === 'open') {
-          offersHtml = '<div class="item-meta" style="margin-top:10px">No offers yet — developers will see your project in their job search.</div>';
+          offersHtml = '<div class="item-meta" style="margin-top:10px">No entries yet — developers will see your project in their job search and can submit a working demo.</div>';
         }
 
         card.innerHTML =

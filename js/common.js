@@ -251,25 +251,27 @@ function estimateProject(category, type, selectedFeatureKeys) {
   return { min: Math.round(min / 500) * 500, max: Math.round(max / 500) * 500, weeks: Math.ceil(weeks) };
 }
 
-// ============ SMART BID RANKING ============
+// ============ SMART BID RANKING / MATCH SCORE ============
 // Composite score (0-100): 50% developer rating, 20% track record (review count,
 // caps at 10), 30% price competitiveness within the client's stated budget.
 // New developers (no reviews) can still rank #1 by pricing competitively.
 
+function computeMatchScore(offer, budgetMin, budgetMax, ratingsMap) {
+  const rating = ratingsMap.get(offer.developer_id);
+  const ratingScore = rating ? (rating.avg / 5) * 50 : 0;
+  const trackScore = rating ? Math.min(rating.count / 10, 1) * 20 : 0;
+
+  let priceScore = 15; // neutral default if budget range is degenerate (min === max)
+  if (budgetMax > budgetMin) {
+    const normalized = (offer.price - budgetMin) / (budgetMax - budgetMin);
+    priceScore = (1 - Math.min(Math.max(normalized, 0), 1)) * 30;
+  }
+
+  return Math.round(ratingScore + trackScore + priceScore);
+}
+
 function rankOffers(offers, budgetMin, budgetMax, ratingsMap) {
-  const scored = offers.map(o => {
-    const rating = ratingsMap.get(o.developer_id);
-    const ratingScore = rating ? (rating.avg / 5) * 50 : 0;
-    const trackScore = rating ? Math.min(rating.count / 10, 1) * 20 : 0;
-
-    let priceScore = 15; // neutral default if budget range is degenerate (min === max)
-    if (budgetMax > budgetMin) {
-      const normalized = (o.price - budgetMin) / (budgetMax - budgetMin);
-      priceScore = (1 - Math.min(Math.max(normalized, 0), 1)) * 30;
-    }
-
-    return { offer: o, score: ratingScore + trackScore + priceScore };
-  });
+  const scored = offers.map(o => ({ offer: o, score: computeMatchScore(o, budgetMin, budgetMax, ratingsMap) }));
   scored.sort((a, b) => b.score - a.score);
   return scored.map(s => s.offer);
 }
