@@ -50,7 +50,9 @@
           <div class="card" style="background:#f0f9ff;border-color:#bae6fd;margin:12px 0">
             <button type="button" class="btn btn-outline btn-sm" onclick="toggleWants()">+ Add What You Want in Your Website</button>
             <div id="wants-box" style="display:none;margin-top:12px">
-              <label style="margin-top:0">Type anything you want — any language is fine</label>
+              <label style="margin-top:0">Not sure what to ask for? Click any suggestion below to add it</label>
+              <div id="wants-suggestions" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+              <label>Or type anything you want — any language is fine</label>
               <textarea id="p-wants" placeholder="e.g. gusto ko po may admin panel, secure yung data, at puwedeng mag-login gamit ang phone number..."></textarea>
               <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addWants()">Add</button>
               <div id="wants-list" style="margin-top:10px"></div>
@@ -157,6 +159,25 @@
       box.style.display = box.style.display === 'none' ? 'block' : 'none';
     }
 
+    // Quick-add suggestion chips, rebuilt whenever the category changes.
+    const wantsSuggestionsEl = document.getElementById('wants-suggestions');
+    function renderWantsSuggestions() {
+      const suggestions = CATEGORY_SUGGESTIONS[catSel.value] || CATEGORY_SUGGESTIONS['Other'];
+      wantsSuggestionsEl.innerHTML = '';
+      suggestions.forEach(s => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'btn btn-outline btn-sm';
+        chip.style.cssText = 'font-weight:400;font-size:12px';
+        chip.title = s.desc;
+        chip.textContent = '+ ' + s.label;
+        chip.onclick = () => addWantsText(s.label + ' — ' + s.desc);
+        wantsSuggestionsEl.appendChild(chip);
+      });
+    }
+    renderWantsSuggestions();
+    catSel.addEventListener('change', renderWantsSuggestions);
+
     let wantsList = [];
 
     function renderWantsList() {
@@ -183,13 +204,18 @@
       document.getElementById('p-details').value = wantsList.join('\n\n');
     }
 
+    function addWantsText(text) {
+      if (!text || wantsList.includes(text)) return;
+      wantsList.push(text);
+      renderWantsList();
+      syncWantsToDetails();
+    }
+
     function addWants() {
       const wants = document.getElementById('p-wants').value.trim();
       if (!wants) return;
-      wantsList.push(wants);
+      addWantsText(wants);
       document.getElementById('p-wants').value = '';
-      renderWantsList();
-      syncWantsToDetails();
     }
 
     document.getElementById('post-form').addEventListener('submit', async (e) => {

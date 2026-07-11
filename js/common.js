@@ -130,6 +130,87 @@ const CATEGORIES = [
   'Landing Page', 'School / LMS', 'Other'
 ];
 
+// Quick-add suggestion chips shown under "Add What You Want" — clicking one adds it
+// straight to the client's wants list. Not a required checklist, just ideas so
+// non-technical clients don't have to think of everything from scratch.
+const CATEGORY_SUGGESTIONS = {
+  'E-commerce / Online Store': [
+    { label: 'Online payment (GCash, Card, atbp.)', desc: 'Direktang babayaran ka ng customer sa app/website — hindi na COD/manual lang.' },
+    { label: 'Account/login ng bawat customer', desc: 'Makikita nila ang sarili nilang order history kapag bumalik sila.' },
+    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng users, order, at produkto mo, hindi kailangan mag-code.' },
+    { label: 'Secure na database', desc: 'Ligtas ang datos ng customer gamit ang trusted na 3rd-party na database tulad ng Supabase.' },
+    { label: 'Makikitang stock ng mga paninda', desc: 'Makikita mo at ng customer kung ilan pa ang natitirang paninda.' },
+    { label: 'Search at filter ng produkto', desc: 'Puwedeng maghanap ang customer ng specific na item.' },
+    { label: 'SMS/Email updates sa customer', desc: 'Awtomatikong abiso kapag na-confirm o na-deliver na ang order.' },
+    { label: 'Tracking ng delivery/rider', desc: 'Makikita ng customer kung saan na ang delivery/rider niya.' }
+  ],
+  'POS System': [
+    { label: 'Kaya mag-print ng resibo', desc: 'Direktang puwedeng i-print ang resibo sa printer mo.' },
+    { label: 'Stock/inventory tracking', desc: 'Awtomatikong babawasan ang stock count kada benta.' },
+    { label: 'Maraming cashier/staff account', desc: 'Bawat empleyado may sariling login.' },
+    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng staff, benta, at produkto mo.' },
+    { label: 'Secure na database', desc: 'Ligtas ang datos ng benta/staff mo gamit ang Supabase.' },
+    { label: 'Sales report', desc: 'Makikita mo kung magkano ang kinita mo araw-araw/linggo-linggo.' },
+    { label: 'Gumagana kahit walang internet', desc: 'Puwede ka pa ring mag-benta kahit nawalan ng WiFi/data.' },
+    { label: 'Barcode scanning', desc: 'I-scan mo lang ang barcode ng produkto.' }
+  ],
+  'Booking / Reservation': [
+    { label: 'Online booking/calendar', desc: 'Makikita ng customer ang bakanteng oras/araw.' },
+    { label: 'SMS/email reminder sa customer', desc: 'Awtomatikong paalala bago ang appointment.' },
+    { label: 'Online deposit/bayad', desc: 'Kailangan munang magbayad ng deposit bago ma-confirm.' },
+    { label: 'Account ng customer', desc: 'Makikita ng customer ang mga dati at paparating niyang booking.' },
+    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng booking at customer mo.' },
+    { label: 'Secure na database', desc: 'Ligtas ang datos ng customer gamit ang Supabase.' },
+    { label: 'Schedule management ng maraming staff', desc: 'Bawat staff/stylist may sariling schedule.' }
+  ],
+  'Food Delivery': [
+    { label: 'Live tracking ng order/rider', desc: 'Makikita ng customer sa mapa kung saan na ang order/rider niya.' },
+    { label: 'Online payment (GCash/Card)', desc: 'Direktang babayaran ka sa app.' },
+    { label: 'Account ng customer', desc: 'Makikita nila ang sarili nilang order history.' },
+    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng order, resto/branch, at rider.' },
+    { label: 'Secure na database', desc: 'Ligtas ang datos ng customer gamit ang Supabase.' },
+    { label: 'Push notification updates', desc: 'Abiso kapag na-confirm, na-cook, o padating na ang order.' },
+    { label: 'Maraming branch/resto', desc: 'Kayang i-manage lahat ng sanga sa iisang app.' },
+    { label: 'Rating/review ng customer', desc: 'Puwedeng mag-iwan ng rating pagkatapos ng order.' }
+  ],
+  'Portfolio / Company Website': [
+    { label: 'Contact form', desc: 'May form na puwedeng sagutan ng bisita para makausap ka.' },
+    { label: 'Gallery ng mga larawan/portfolio', desc: 'Page na puwedeng i-browse ang mga larawan ng dati mong ginawa.' },
+    { label: 'Madaling palitan ang content (admin panel)', desc: 'Puwede mong palitan ang text/larawan nang hindi mag-code.' },
+    { label: 'Blog/News section', desc: 'Puwede kang mag-post ng balita/artikulo.' },
+    { label: 'Filipino at English na bersyon', desc: 'Puwedeng ipalit ang wika ng website.' }
+  ],
+  'Inventory Management': [
+    { label: 'Barcode scanning', desc: 'I-scan mo lang ang barcode para agad ma-update ang stock.' },
+    { label: 'Maraming warehouse/branch', desc: 'Kaya i-track ang stock sa magkakaibang lokasyon.' },
+    { label: 'Automatic alert kapag paubos na ang stock', desc: 'Mapapaalala ka bago talaga maubos ang isang item.' },
+    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng stock at staff mo.' },
+    { label: 'Secure na database', desc: 'Ligtas ang datos ng negosyo mo gamit ang Supabase.' },
+    { label: 'Reports', desc: 'Makikita mo ang buod ng stock movement.' }
+  ],
+  'Landing Page': [
+    { label: 'Contact form', desc: 'May form na puwedeng sagutan ng bisita para makausap ka.' },
+    { label: 'Social media links', desc: 'May mga icon/link papunta sa Facebook, Instagram, atbp.' },
+    { label: 'Newsletter/Email signup', desc: 'Puwedeng mag-iwan ng email ang bisita.' },
+    { label: 'Secure na database para sa mga inquiry', desc: 'Ligtas ang mga email/inquiry na natatanggap mo gamit ang Supabase.' }
+  ],
+  'School / LMS': [
+    { label: 'Online quiz/exam', desc: 'Puwedeng gumawa ng pagsusulit na online.' },
+    { label: 'Grade tracking', desc: 'Makikita ng estudyante/guro ang mga grado.' },
+    { label: 'Video/file upload ng mga lesson', desc: 'Puwedeng mag-upload ang guro ng video/PDF na aralin.' },
+    { label: 'Access para sa magulang/guardian', desc: 'May sariling login din ang magulang.' },
+    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng estudyante, guro, at grado.' },
+    { label: 'Secure na database', desc: 'Ligtas ang datos ng estudyante/guro gamit ang Supabase.' }
+  ],
+  'Other': [
+    { label: 'Account/login ng users', desc: 'Bawat gumagamit ay may sarili niyang account.' },
+    { label: 'Online payment', desc: 'Puwedeng magbayad online sa loob mismo ng app/website.' },
+    { label: 'Admin panel', desc: 'Puwede mong kontrolin at tingnan ang lahat ng users at data mo.' },
+    { label: 'Secure na database', desc: 'Ligtas ang datos ng users mo gamit ang Supabase.' },
+    { label: 'Notifications (SMS/Email/Push)', desc: 'Awtomatikong abiso sa users tungkol sa mga update.' }
+  ]
+};
+
 const SKILL_OPTIONS = [
   'HTML/CSS/JS', 'React', 'Vue', 'Angular', 'Node.js', 'PHP/Laravel',
   'Python/Django', 'Flutter', 'React Native', 'Android (Kotlin/Java)',
