@@ -226,8 +226,9 @@ const ESTIMATOR_TYPE_MULTIPLIER = { website: 1, mobile_app: 1.6, both: 2.2 };
 const CATEGORY_FEATURES = {
   'E-commerce / Online Store': [
     { key: 'payment', label: 'Puwedeng magbayad online (GCash, Card, atbp.)', desc: 'Direktang babayaran ka ng customer sa app/website — hindi na COD/manual lang.', min: 8000, max: 15000, weeks: 1 },
-    { key: 'accounts', label: 'May sariling account/login ang bawat customer', desc: 'Makikita nila ang sarili nilang order history kapag bumalik sila.', min: 3000, max: 5000, weeks: 0.5 },
-    { key: 'admin', label: 'May admin panel ka para i-manage ang mga order/produkto', desc: 'Sarili mong page para dagdag/tanggal ng produkto at tingnan ang mga order — hindi kailangan i-edit ang code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'accounts', label: 'May sariling account/login ang bawat customer (signup method)', desc: 'Makikita nila ang sarili nilang order history kapag bumalik sila. Kasama na dito kung paano sila magsi-sign up (email, phone number, atbp.).', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'admin', label: 'Sarili mong admin panel?', desc: 'Ito ang magiging admin mo — puwede mong kontrolin at tingnan ang lahat ng users, order, at produkto mo, hindi kailangan mag-code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'security', label: 'Secure na database?', desc: 'Sisiguraduhin naming ligtas ang datos ng iyong mga customer gamit ang trusted na 3rd-party na database tulad ng Supabase — hindi basta-basta makikita o magagamit ng ibang tao.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'stock', label: 'May makikitang stock ng mga paninda', desc: 'Makikita mo (at ng customer) kung ilan pa ang natitirang paninda.', min: 4000, max: 8000, weeks: 1 },
     { key: 'search', label: 'May search at filter ng produkto', desc: 'Puwedeng maghanap ang customer ng specific na item o i-filter by category/presyo.', min: 2000, max: 4000, weeks: 0.5 },
     { key: 'notify', label: 'SMS/Email updates sa customer (order status)', desc: 'Awtomatikong mapapadalhan ng SMS/email ang customer kapag na-confirm o na-deliver na ang order.', min: 3000, max: 6000, weeks: 0.5 },
@@ -236,7 +237,9 @@ const CATEGORY_FEATURES = {
   'POS System': [
     { key: 'receipt', label: 'Kaya mag-print ng resibo', desc: 'Direktang puwedeng i-print ang resibo sa printer mo pagkatapos ng bawat benta.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'stock', label: 'May stock/inventory tracking', desc: 'Awtomatikong babawasan ang stock count kada benta, makikita mo agad kung kailan mag-re-restock.', min: 4000, max: 8000, weeks: 1 },
-    { key: 'staff', label: 'Maraming cashier/staff account, may sariling login', desc: 'Bawat empleyado may sariling account, para malaman mo kung sino ang nag-transact.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'staff', label: 'Maraming cashier/staff account (signup method)', desc: 'Bawat empleyado may sariling account/login, para malaman mo kung sino ang nag-transact.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'admin', label: 'Sarili mong admin panel?', desc: 'Ito ang magiging admin mo — puwede mong kontrolin at tingnan ang lahat ng staff, benta, at produkto mo, hindi kailangan mag-code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'security', label: 'Secure na database?', desc: 'Sisiguraduhin naming ligtas ang datos ng benta/staff mo gamit ang trusted na 3rd-party na database tulad ng Supabase.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'reports', label: 'May sales report', desc: 'Makikita mo kung magkano ang kinita mo araw-araw/linggo-linggo, pinakamabenta na item, atbp.', min: 4000, max: 8000, weeks: 1 },
     { key: 'offline', label: 'Gumagana kahit walang internet', desc: 'Puwede ka pa ring mag-benta kahit nawalan ng WiFi/data — mag-sy-sync na lang pag bumalik ang internet.', min: 5000, max: 10000, weeks: 1 },
     { key: 'barcode', label: 'Barcode scanning', desc: 'I-scan mo lang ang barcode ng produkto, hindi na kailangan mag-type ng presyo.', min: 3000, max: 6000, weeks: 0.5 }
@@ -245,12 +248,17 @@ const CATEGORY_FEATURES = {
     { key: 'calendar', label: 'Online booking/calendar', desc: 'Makikita ng customer ang bakanteng oras/araw at puwede silang mag-book kahit saan.', min: 4000, max: 8000, weeks: 1 },
     { key: 'reminder', label: 'SMS/email reminder sa customer', desc: 'Awtomatikong paalala bago ang appointment, para mabawasan ang no-show.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'deposit', label: 'Online deposit/bayad', desc: 'Kailangan munang magbayad ng deposit ang customer bago ma-confirm ang booking niya.', min: 8000, max: 15000, weeks: 1 },
-    { key: 'accounts', label: 'May account ang customer (booking history)', desc: 'Makikita ng customer ang mga dati at paparating niyang booking.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'accounts', label: 'May account ang customer (signup method, booking history)', desc: 'Makikita ng customer ang mga dati at paparating niyang booking. Kasama na dito kung paano sila magsi-sign up.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'admin', label: 'Sarili mong admin panel?', desc: 'Ito ang magiging admin mo — puwede mong kontrolin at tingnan ang lahat ng booking at customer mo, hindi kailangan mag-code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'security', label: 'Secure na database?', desc: 'Sisiguraduhin naming ligtas ang datos ng iyong mga customer gamit ang trusted na 3rd-party na database tulad ng Supabase.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'schedule', label: 'Schedule management ng maraming staff', desc: 'Kung marami kang empleyado/stylist/atbp., bawat isa may sariling schedule na makikita.', min: 4000, max: 8000, weeks: 1 }
   ],
   'Food Delivery': [
     { key: 'tracking', label: 'Live tracking ng order/rider', desc: 'Makikita ng customer sa mapa kung saan na ang order/rider niya, parang Grab/Foodpanda.', min: 8000, max: 15000, weeks: 1.5 },
     { key: 'payment', label: 'Online payment (GCash/Card)', desc: 'Direktang babayaran ka sa app — hindi na cash-on-delivery lang.', min: 8000, max: 15000, weeks: 1 },
+    { key: 'accounts', label: 'May account ang customer (signup method)', desc: 'Makikita nila ang sarili nilang order history. Kasama na dito kung paano sila magsi-sign up.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'admin', label: 'Sarili mong admin panel?', desc: 'Ito ang magiging admin mo — puwede mong kontrolin at tingnan ang lahat ng order, resto/branch, at rider.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'security', label: 'Secure na database?', desc: 'Sisiguraduhin naming ligtas ang datos ng iyong mga customer gamit ang trusted na 3rd-party na database tulad ng Supabase.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'notify', label: 'Push notification updates', desc: 'Awtomatikong notification sa customer kapag na-confirm, na-cook, o padating na ang order.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'branches', label: 'Maraming branch/resto', desc: 'Kung marami kang sanga/partner na resto, kayang i-manage lahat sa iisang app.', min: 5000, max: 10000, weeks: 1 },
     { key: 'rating', label: 'Rating/review ng customer', desc: 'Puwedeng mag-iwan ng rating/review ang customer pagkatapos ng order.', min: 2000, max: 4000, weeks: 0.5 }
@@ -258,6 +266,7 @@ const CATEGORY_FEATURES = {
   'Portfolio / Company Website': [
     { key: 'contact', label: 'Contact form', desc: 'May form na puwedeng sagutan ng bisita para direktang makausap ka.', min: 2000, max: 4000, weeks: 0.5 },
     { key: 'gallery', label: 'Gallery ng mga larawan/portfolio', desc: 'Page na puwedeng i-browse ang mga larawan ng dati mong ginawa/trabaho.', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'admin', label: 'Madali mong mapapalitan ang content nang wala kang admin panel?', desc: 'Ito ang magiging admin mo — puwede mong palitan ang text/larawan sa website mo nang hindi kailangan mag-code o tumawag pa ng developer.', min: 4000, max: 8000, weeks: 1 },
     { key: 'blog', label: 'Blog/News section', desc: 'Puwede kang mag-post ng balita/artikulo na makikita ng mga bisita.', min: 3000, max: 6000, weeks: 1 },
     { key: 'multilang', label: 'Filipino at English na bersyon', desc: 'Puwedeng ipalit ang wika ng website depende sa gusto ng bisita.', min: 3000, max: 6000, weeks: 0.5 }
   ],
@@ -265,23 +274,29 @@ const CATEGORY_FEATURES = {
     { key: 'barcode', label: 'Barcode scanning', desc: 'I-scan mo lang ang barcode para agad malaman/ma-update ang stock.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'branches', label: 'Maraming warehouse/branch', desc: 'Kaya i-track ang stock sa magkakaibang lokasyon nang magkakahiwalay.', min: 5000, max: 10000, weeks: 1 },
     { key: 'alerts', label: 'Automatic alert kapag paubos na ang stock', desc: 'Mapapaalala ka bago talaga maubos ang isang item, para makapag-order ka agad.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'admin', label: 'Sarili mong admin panel?', desc: 'Ito ang magiging admin mo — puwede mong kontrolin at tingnan ang lahat ng stock at staff mo, hindi kailangan mag-code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'security', label: 'Secure na database?', desc: 'Sisiguraduhin naming ligtas ang datos ng negosyo mo gamit ang trusted na 3rd-party na database tulad ng Supabase.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'reports', label: 'Reports', desc: 'Makikita mo ang buod ng stock movement — anong pumapasok/lumalabas.', min: 4000, max: 8000, weeks: 1 }
   ],
   'Landing Page': [
     { key: 'contact', label: 'Contact form', desc: 'May form na puwedeng sagutan ng bisita para direktang makausap ka.', min: 2000, max: 4000, weeks: 0.5 },
     { key: 'social', label: 'Social media links', desc: 'May mga icon/link papunta sa Facebook, Instagram, atbp. mo.', min: 1000, max: 2000, weeks: 0.5 },
-    { key: 'newsletter', label: 'Newsletter/Email signup', desc: 'Puwedeng mag-iwan ng email ang bisita para bigyan mo ng updates/promo sa hinaharap.', min: 2000, max: 4000, weeks: 0.5 }
+    { key: 'newsletter', label: 'Newsletter/Email signup', desc: 'Puwedeng mag-iwan ng email ang bisita para bigyan mo ng updates/promo sa hinaharap.', min: 2000, max: 4000, weeks: 0.5 },
+    { key: 'security', label: 'Secure na database para sa mga email/inquiry?', desc: 'Sisiguraduhin naming ligtas ang mga email/inquiry na natatanggap mo gamit ang trusted na 3rd-party na database tulad ng Supabase.', min: 2000, max: 4000, weeks: 0.5 }
   ],
   'School / LMS': [
     { key: 'quiz', label: 'Online quiz/exam', desc: 'Puwedeng gumawa ng pagsusulit na online sasagutan ng mga estudyante.', min: 5000, max: 10000, weeks: 1 },
     { key: 'grades', label: 'Grade tracking', desc: 'Makikita ng estudyante/guro ang mga grado sa isang lugar.', min: 4000, max: 8000, weeks: 1 },
     { key: 'upload', label: 'Video/file upload ng mga lesson', desc: 'Puwedeng mag-upload ang guro ng video/PDF na aralin, mababasa/mapapanood ng estudyante anumang oras.', min: 3000, max: 6000, weeks: 0.5 },
-    { key: 'parent', label: 'Access para sa magulang/guardian', desc: 'May sariling login din ang magulang para masubaybayan ang progress ng anak.', min: 3000, max: 6000, weeks: 0.5 }
+    { key: 'parent', label: 'Access para sa magulang/guardian (signup method)', desc: 'May sariling login din ang magulang para masubaybayan ang progress ng anak.', min: 3000, max: 6000, weeks: 0.5 },
+    { key: 'admin', label: 'Sarili mong admin panel?', desc: 'Ito ang magiging admin mo — puwede mong kontrolin at tingnan ang lahat ng estudyante, guro, at grado, hindi kailangan mag-code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'security', label: 'Secure na database?', desc: 'Sisiguraduhin naming ligtas ang datos ng estudyante/guro gamit ang trusted na 3rd-party na database tulad ng Supabase.', min: 3000, max: 6000, weeks: 0.5 }
   ],
   'Other': [
-    { key: 'accounts', label: 'May account/login ang users', desc: 'Bawat gumagamit ay may sarili niyang account.', min: 3000, max: 5000, weeks: 0.5 },
+    { key: 'accounts', label: 'May account/login ang users (signup method)', desc: 'Bawat gumagamit ay may sarili niyang account. Kasama na dito kung paano sila magsi-sign up.', min: 3000, max: 5000, weeks: 0.5 },
     { key: 'payment', label: 'Online payment', desc: 'Puwedeng magbayad online sa loob mismo ng app/website.', min: 8000, max: 15000, weeks: 1 },
-    { key: 'admin', label: 'May admin panel', desc: 'Sarili mong page para pamahalaan ang laman ng app/website nang hindi kailangan mag-code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'admin', label: 'Sarili mong admin panel?', desc: 'Ito ang magiging admin mo — puwede mong kontrolin at tingnan ang lahat ng users at data mo, hindi kailangan mag-code.', min: 5000, max: 10000, weeks: 1 },
+    { key: 'security', label: 'Secure na database?', desc: 'Sisiguraduhin naming ligtas ang datos ng users mo gamit ang trusted na 3rd-party na database tulad ng Supabase.', min: 3000, max: 6000, weeks: 0.5 },
     { key: 'notify', label: 'Notifications (SMS/Email/Push)', desc: 'Awtomatikong mapapadalhan ng abiso ang users tungkol sa mga update.', min: 3000, max: 6000, weeks: 0.5 }
   ]
 };
