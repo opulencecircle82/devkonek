@@ -102,12 +102,15 @@
         </p>
         <label style="margin-top:0">PayPal Email (best for international/overseas developers)</label>
         <input type="email" id="pay-paypal" placeholder="you@example.com">
-        <label>Bank Name</label>
-        <input type="text" id="pay-bank-name" placeholder="e.g. BDO, BPI, Metrobank">
-        <label>Account Name</label>
-        <input type="text" id="pay-bank-account" placeholder="Name on the account">
-        <label>SWIFT/BIC Code (for international transfers)</label>
-        <input type="text" id="pay-swift" placeholder="e.g. BNORPHMM">
+        <button type="button" class="btn btn-outline btn-sm" style="margin-top:12px" onclick="toggleBankForm('pay')">+ Add Bank Account</button>
+        <div id="pay-bank-section" style="display:none;margin-top:10px">
+          <label style="margin-top:0">Bank Name</label>
+          <input type="text" id="pay-bank-name" placeholder="e.g. BDO, BPI, Metrobank">
+          <label>Account Name</label>
+          <input type="text" id="pay-bank-account" placeholder="Name on the account">
+          <label>SWIFT/BIC Code (for international transfers)</label>
+          <input type="text" id="pay-swift" placeholder="e.g. BNORPHMM">
+        </div>
         <button class="btn btn-primary" style="margin-top:12px" onclick="savePaymentInfo('pay', me.user.id, 'pay-error', 'pay-ok')">Save Payment Info</button>
         <div class="error-msg" id="pay-error"></div>
         <div class="success-msg" id="pay-ok" style="display:none">Saved!</div>

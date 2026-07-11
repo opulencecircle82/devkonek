@@ -291,11 +291,20 @@ function paymentInfoHtml(profile) {
 }
 
 // Fills a payment-info edit form (4 inputs with the given id prefix) from a profile row.
+// The bank fields live in a collapsible section — auto-expand it if bank info already exists.
 function fillPaymentForm(prefix, profile) {
   document.getElementById(prefix + '-paypal').value = profile.paypal_email || '';
   document.getElementById(prefix + '-bank-name').value = profile.bank_name || '';
   document.getElementById(prefix + '-bank-account').value = profile.bank_account_name || '';
   document.getElementById(prefix + '-swift').value = profile.swift_code || '';
+  if (profile.bank_name) {
+    document.getElementById(prefix + '-bank-section').style.display = 'block';
+  }
+}
+
+function toggleBankForm(prefix) {
+  const el = document.getElementById(prefix + '-bank-section');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 async function savePaymentInfo(prefix, userId, errElId, okElId) {
