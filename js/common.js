@@ -280,10 +280,10 @@ function rankOffers(offers, budgetMin, budgetMax, ratingsMap) {
 function paymentInfoHtml(profile) {
   const rows = [];
   if (profile.paypal_email) rows.push('PayPal (international): <strong>' + escapeHtml(profile.paypal_email) + '</strong>');
-  if (profile.gcash_number) rows.push('GCash: <strong>' + escapeHtml(profile.gcash_number) + '</strong>');
   if (profile.bank_name) {
     rows.push('Bank: <strong>' + escapeHtml(profile.bank_name) +
-      (profile.bank_account_name ? ' — ' + escapeHtml(profile.bank_account_name) : '') + '</strong>');
+      (profile.bank_account_name ? ' — ' + escapeHtml(profile.bank_account_name) : '') +
+      (profile.swift_code ? ' (SWIFT: ' + escapeHtml(profile.swift_code) + ')' : '') + '</strong>');
   }
   if (!rows.length) return '<div style="font-size:13px;color:var(--muted);margin-top:6px">No payment info added yet.</div>';
   return '<div style="margin-top:6px;font-size:14px;line-height:1.6">' + rows.join('<br>') + '</div>';
@@ -292,9 +292,9 @@ function paymentInfoHtml(profile) {
 // Fills a payment-info edit form (4 inputs with the given id prefix) from a profile row.
 function fillPaymentForm(prefix, profile) {
   document.getElementById(prefix + '-paypal').value = profile.paypal_email || '';
-  document.getElementById(prefix + '-gcash').value = profile.gcash_number || '';
   document.getElementById(prefix + '-bank-name').value = profile.bank_name || '';
   document.getElementById(prefix + '-bank-account').value = profile.bank_account_name || '';
+  document.getElementById(prefix + '-swift').value = profile.swift_code || '';
 }
 
 async function savePaymentInfo(prefix, userId, errElId, okElId) {
@@ -305,9 +305,9 @@ async function savePaymentInfo(prefix, userId, errElId, okElId) {
 
   const { error } = await db.from('profiles').update({
     paypal_email: document.getElementById(prefix + '-paypal').value.trim() || null,
-    gcash_number: document.getElementById(prefix + '-gcash').value.trim() || null,
     bank_name: document.getElementById(prefix + '-bank-name').value.trim() || null,
-    bank_account_name: document.getElementById(prefix + '-bank-account').value.trim() || null
+    bank_account_name: document.getElementById(prefix + '-bank-account').value.trim() || null,
+    swift_code: document.getElementById(prefix + '-swift').value.trim() || null
   }).eq('id', userId);
 
   if (error) { errEl.textContent = error.message; return; }
