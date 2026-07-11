@@ -64,17 +64,58 @@ a { color: var(--primary); text-decoration: none; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ---------- Promo banner ---------- */
+.promo-banner {
+  background: #eafbe7; display: flex; justify-content: center; align-items: center;
+  gap: 6px 14px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+  color: #14532d; flex-wrap: wrap; text-align: center;
+}
+.promo-banner .promo-link { color: #14532d; font-weight: 800; text-decoration: underline; white-space: nowrap; }
+:root[data-theme="dark"] .promo-banner { background: #16301f; color: #bbf7d0; }
+:root[data-theme="dark"] .promo-banner .promo-link { color: #bbf7d0; }
+
 /* ---------- Hero / landing ---------- */
 .hero {
-  text-align: center; padding: 80px 16px 60px; color: #fff;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  position: relative; overflow: hidden; text-align: center;
+  padding: 100px 16px 70px; color: #fff;
+  background: linear-gradient(135deg, #0b1220 0%, #16213e 55%, #1a2c52 100%);
 }
-.hero h1 { font-size: 42px; font-weight: 800; margin-bottom: 14px; }
-.hero p { font-size: 18px; color: rgba(255,255,255,0.9); max-width: 640px; margin: 0 auto 28px; }
-.hero-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.hero::before, .hero::after {
+  content: ''; position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.4; pointer-events: none;
+}
+.hero::before { width: 420px; height: 420px; background: var(--primary); top: -140px; left: -100px; }
+.hero::after { width: 380px; height: 380px; background: var(--accent); bottom: -160px; right: -80px; }
+.hero-inner { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+.hero h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; letter-spacing: -0.5px; line-height: 1.1; }
+.hero p { font-size: 18px; color: rgba(255,255,255,0.85); max-width: 620px; margin: 0 auto; }
+
+.role-toggle {
+  display: inline-flex; background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.3);
+  border-radius: 999px; padding: 4px; margin: 28px 0 20px;
+}
+.role-toggle-btn {
+  padding: 11px 24px; border-radius: 999px; font-weight: 700; font-size: 14px;
+  color: rgba(255,255,255,0.85); text-decoration: none; transition: all .15s ease;
+}
+.role-toggle-btn.active, .role-toggle-btn:hover { background: #fff; color: #16213e; }
+
+.hero-search {
+  display: flex; max-width: 520px; margin: 0 auto 26px; background: #fff; border-radius: 999px;
+  padding: 4px 4px 4px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+.hero-search input {
+  border: none; flex: 1; padding: 12px 8px; font-size: 15px; background: transparent; color: #1f2937;
+}
+.hero-search input:focus { outline: none; }
+.hero-search button {
+  border: none; background: #111827; color: #fff; border-radius: 999px; padding: 11px 22px;
+  font-weight: 700; cursor: pointer; white-space: nowrap; font-size: 14px;
+}
+.hero-search button:hover { background: #000; }
+
 .trust-badges {
   display: flex; gap: 10px 22px; justify-content: center; flex-wrap: wrap;
-  margin-top: 26px; font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 600;
+  margin-top: 8px; font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 600;
 }
 
 .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; padding: 40px 0 20px; }

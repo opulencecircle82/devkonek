@@ -25,22 +25,35 @@
     </div>
   </header>
 
+  <div class="promo-banner">
+    <span>🎯 New: See a working demo before you hire — not just a written pitch.</span>
+    <a href="auth.html?mode=signup" class="promo-link">Get started →</a>
+  </div>
+
   <section class="hero">
-    <h1>Get Your App Built — or Get Paid Building One</h1>
-    <p>
-      DevKonek connects business owners who need a website or app with skilled developers ready
-      to build it. Post a project or find your next gig — matched by real working demos, fair
-      prices, and verified reviews.
-    </p>
-    <div class="hero-ctas">
-      <a href="auth.html?mode=signup&role=client" class="btn btn-primary">I Need a Website / App</a>
-      <a href="auth.html?mode=signup&role=developer" class="btn btn-accent">I'm a Developer</a>
-    </div>
-    <div class="trust-badges">
-      <span>🔒 Access-controlled &amp; secure</span>
-      <span>⭐ Verified reviews after every project</span>
-      <span>🛡️ Reports &amp; moderation keep bad actors out</span>
-      <span>🌏 Open to clients &amp; developers worldwide</span>
+    <div class="hero-inner">
+      <h1>Work at the speed of your ambition</h1>
+      <p>
+        Post what you need and compare real working demos with prices — or find your next
+        gig and get paid for what you build.
+      </p>
+
+      <div class="role-toggle">
+        <a href="auth.html?mode=signup&role=client" class="role-toggle-btn active">I want to hire</a>
+        <a href="auth.html?mode=signup&role=developer" class="role-toggle-btn">I want to work</a>
+      </div>
+
+      <form class="hero-search" onsubmit="event.preventDefault(); window.location.href='auth.html?mode=signup&role=client';">
+        <input type="text" placeholder="Describe what you need built...">
+        <button type="submit">🔍 Search</button>
+      </form>
+
+      <div class="trust-badges">
+        <span>🔒 Access-controlled &amp; secure</span>
+        <span>⭐ Verified reviews after every project</span>
+        <span>🛡️ Reports &amp; moderation keep bad actors out</span>
+        <span>🌏 Open to clients &amp; developers worldwide</span>
+      </div>
     </div>
   </section>
 
