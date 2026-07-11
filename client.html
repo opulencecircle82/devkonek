@@ -52,7 +52,8 @@
             <div id="wants-box" style="display:none;margin-top:12px">
               <label style="margin-top:0">Type anything you want — any language is fine</label>
               <textarea id="p-wants" placeholder="e.g. gusto ko po may admin panel, secure yung data, at puwedeng mag-login gamit ang phone number..."></textarea>
-              <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addWants()">Add to Details</button>
+              <button type="button" class="btn btn-primary btn-sm" style="margin-top:10px" onclick="addWants()">Add</button>
+              <div id="wants-list" style="margin-top:10px"></div>
             </div>
           </div>
 
@@ -156,13 +157,39 @@
       box.style.display = box.style.display === 'none' ? 'block' : 'none';
     }
 
+    let wantsList = [];
+
+    function renderWantsList() {
+      const el = document.getElementById('wants-list');
+      el.innerHTML = '';
+      wantsList.forEach((w, i) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;gap:8px;' +
+          'font-size:13px;padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;margin-top:6px';
+        const textSpan = document.createElement('span');
+        textSpan.textContent = w;
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.textContent = '✕';
+        removeBtn.style.cssText = 'border:none;background:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0';
+        removeBtn.onclick = () => { wantsList.splice(i, 1); renderWantsList(); syncWantsToDetails(); };
+        row.appendChild(textSpan);
+        row.appendChild(removeBtn);
+        el.appendChild(row);
+      });
+    }
+
+    function syncWantsToDetails() {
+      document.getElementById('p-details').value = wantsList.join('\n\n');
+    }
+
     function addWants() {
       const wants = document.getElementById('p-wants').value.trim();
       if (!wants) return;
-      const detailsEl = document.getElementById('p-details');
-      detailsEl.value = detailsEl.value ? detailsEl.value + '\n\n' + wants : wants;
+      wantsList.push(wants);
       document.getElementById('p-wants').value = '';
-      document.getElementById('wants-box').style.display = 'none';
+      renderWantsList();
+      syncWantsToDetails();
     }
 
     document.getElementById('post-form').addEventListener('submit', async (e) => {
