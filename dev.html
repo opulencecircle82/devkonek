@@ -81,6 +81,8 @@
           <input type="text" id="pay-bank-name" placeholder="e.g. BDO, BPI, Metrobank">
           <label>Account Name</label>
           <input type="text" id="pay-bank-account" placeholder="Name on the account">
+          <label>Account Number</label>
+          <input type="text" id="pay-bank-number" placeholder="Your bank account number">
           <label>SWIFT/BIC Code (for international transfers)</label>
           <input type="text" id="pay-swift" placeholder="e.g. BNORPHMM">
         </div>
@@ -115,7 +117,7 @@
 
     async function refreshMyOffers() {
       const { data } = await db.from('offers')
-        .select('*, projects(id, title, status, project_type, category, client_id, profiles:client_id(full_name, business_name, contact, paypal_email, bank_name, bank_account_name, swift_code))')
+        .select('*, projects(id, title, status, project_type, category, client_id, profiles:client_id(full_name, business_name, contact, paypal_email, bank_name, bank_account_name, bank_account_number, swift_code))')
         .eq('developer_id', me.user.id)
         .order('created_at', { ascending: false });
       myOffers = data || [];

@@ -108,6 +108,8 @@
           <input type="text" id="pay-bank-name" placeholder="e.g. BDO, BPI, Metrobank">
           <label>Account Name</label>
           <input type="text" id="pay-bank-account" placeholder="Name on the account">
+          <label>Account Number</label>
+          <input type="text" id="pay-bank-number" placeholder="Your bank account number">
           <label>SWIFT/BIC Code (for international transfers)</label>
           <input type="text" id="pay-swift" placeholder="e.g. BNORPHMM">
         </div>
@@ -221,7 +223,7 @@
 
       const [{ data: projects, error }, { data: myReviews }] = await Promise.all([
         db.from('projects')
-          .select('*, offers(*, profiles:developer_id(full_name, skills, contact, bio, paypal_email, bank_name, bank_account_name, swift_code))')
+          .select('*, offers(*, profiles:developer_id(full_name, skills, contact, bio, paypal_email, bank_name, bank_account_name, bank_account_number, swift_code))')
           .eq('client_id', me.user.id)
           .order('created_at', { ascending: false }),
         db.from('reviews').select('*').eq('reviewer_id', me.user.id)

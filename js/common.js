@@ -275,27 +275,26 @@ function rankOffers(offers, budgetMin, budgetMax, ratingsMap) {
 }
 
 // ============ PAYMENT INFO ============
-// Deliberately no full bank account number — safe identifiers only.
-// Full account numbers should be exchanged directly between matched parties.
-
 function paymentInfoHtml(profile) {
   const rows = [];
   if (profile.paypal_email) rows.push('PayPal (international): <strong>' + escapeHtml(profile.paypal_email) + '</strong>');
   if (profile.bank_name) {
     rows.push('Bank: <strong>' + escapeHtml(profile.bank_name) +
       (profile.bank_account_name ? ' — ' + escapeHtml(profile.bank_account_name) : '') +
+      (profile.bank_account_number ? ' · Acct #: ' + escapeHtml(profile.bank_account_number) : '') +
       (profile.swift_code ? ' (SWIFT: ' + escapeHtml(profile.swift_code) + ')' : '') + '</strong>');
   }
   if (!rows.length) return '<div style="font-size:13px;color:var(--muted);margin-top:6px">No payment info added yet.</div>';
   return '<div style="margin-top:6px;font-size:14px;line-height:1.6">' + rows.join('<br>') + '</div>';
 }
 
-// Fills a payment-info edit form (4 inputs with the given id prefix) from a profile row.
+// Fills a payment-info edit form (with the given id prefix) from a profile row.
 // The bank fields live in a collapsible section — auto-expand it if bank info already exists.
 function fillPaymentForm(prefix, profile) {
   document.getElementById(prefix + '-paypal').value = profile.paypal_email || '';
   document.getElementById(prefix + '-bank-name').value = profile.bank_name || '';
   document.getElementById(prefix + '-bank-account').value = profile.bank_account_name || '';
+  document.getElementById(prefix + '-bank-number').value = profile.bank_account_number || '';
   document.getElementById(prefix + '-swift').value = profile.swift_code || '';
   if (profile.bank_name) {
     document.getElementById(prefix + '-bank-section').style.display = 'block';
@@ -317,6 +316,7 @@ async function savePaymentInfo(prefix, userId, errElId, okElId) {
     paypal_email: document.getElementById(prefix + '-paypal').value.trim() || null,
     bank_name: document.getElementById(prefix + '-bank-name').value.trim() || null,
     bank_account_name: document.getElementById(prefix + '-bank-account').value.trim() || null,
+    bank_account_number: document.getElementById(prefix + '-bank-number').value.trim() || null,
     swift_code: document.getElementById(prefix + '-swift').value.trim() || null
   }).eq('id', userId);
 
