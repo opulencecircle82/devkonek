@@ -99,6 +99,11 @@
     roleSelect.addEventListener('change', toggleRoleFields);
     toggleRoleFields();
 
+    if (params.get('banned') === '1') {
+      document.getElementById('login-error').textContent =
+        'This account has been suspended. Contact support if you believe this is a mistake.';
+    }
+
     // Build skill checkboxes with DOM API (not innerHTML)
     const skillsWrap = document.getElementById('su-skills');
     SKILL_OPTIONS.forEach(skill => {

@@ -55,11 +55,13 @@
       <button class="tab" data-tab="offers">Offers</button>
       <button class="tab" data-tab="users">Users</button>
       <button class="tab" data-tab="reviews">Reviews</button>
+      <button class="tab" data-tab="reports">Reports <span id="reports-badge"></span></button>
     </div>
 
     <div id="tab-projects"><div id="projects-list"></div></div>
     <div id="tab-offers" style="display:none"><div id="offers-list"></div></div>
     <div id="tab-users" style="display:none"><div id="users-list"></div></div>
+    <div id="tab-reports" style="display:none"><div id="reports-list"></div></div>
     <div id="tab-reviews" style="display:none"><div id="reviews-list"></div></div>
   </div>
 
@@ -72,7 +74,7 @@
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
-      ['projects', 'offers', 'users', 'reviews'].forEach(name => {
+      ['projects', 'offers', 'users', 'reviews', 'reports'].forEach(name => {
         document.getElementById('tab-' + name).style.display = t.dataset.tab === name ? 'block' : 'none';
       });
     }));
@@ -168,18 +170,35 @@
       users.forEach(u => {
         const card = document.createElement('div');
         card.className = 'card';
+        if (u.is_banned) card.style.cssText = 'background:#fef2f2;border-color:#fecaca';
         card.innerHTML =
           '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
-          '<h3>' + escapeHtml(u.full_name) + (u.is_admin ? ' <span class="badge badge-accepted">Admin</span>' : '') + '</h3>' +
+          '<h3>' + escapeHtml(u.full_name) +
+          (u.is_admin ? ' <span class="badge badge-accepted">Admin</span>' : '') +
+          (u.is_banned ? ' <span class="badge badge-cancelled">Suspended</span>' : '') + '</h3>' +
           '<span class="badge badge-open">' + escapeHtml(u.role) + '</span></div>' +
           '<div class="item-meta">' +
           (u.business_name ? 'Business: ' + escapeHtml(u.business_name) + ' · ' : '') +
           'Contact: ' + escapeHtml(u.contact) + ' · Joined ' + fmtDate(u.created_at) + '</div>' +
           (u.skills && u.skills.length
             ? '<div style="margin-top:6px">' + u.skills.map(s => '<span class="badge badge-skill">' + escapeHtml(s) + '</span>').join('') + '</div>'
+            : '') +
+          (!u.is_admin
+            ? '<div style="margin-top:10px">' +
+              (u.is_banned
+                ? '<button class="btn btn-outline btn-sm" onclick="adminToggleBan(\'' + u.id + '\', false)">Unsuspend</button>'
+                : '<button class="btn btn-danger btn-sm" onclick="adminToggleBan(\'' + u.id + '\', true)">Suspend User</button>')
+              + '</div>'
             : '');
         el.appendChild(card);
       });
+    }
+
+    async function adminToggleBan(userId, ban) {
+      if (!confirm(ban ? 'Suspend this user? They will be logged out and unable to use DevKonek.' : 'Lift the suspension for this user?')) return;
+      const { error } = await db.from('profiles').update({ is_banned: ban }).eq('id', userId);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadUsers();
     }
 
     async function loadReviews() {
@@ -208,6 +227,65 @@
       });
     }
 
+    async function loadReports() {
+      const el = document.getElementById('reports-list');
+      el.innerHTML = '<div class="empty-state">Loading...</div>';
+      const { data: reports, error } = await db.from('reports')
+        .select('*, projects(title), reporter:reporter_id(full_name), reported:reported_id(full_name, is_banned)')
+        .order('created_at', { ascending: false });
+      if (error) { el.innerHTML = '<div class="empty-state">Error: ' + escapeHtml(error.message) + '</div>'; return; }
+
+      const openCount = (reports || []).filter(r => r.status === 'open').length;
+      document.getElementById('reports-badge').innerHTML = openCount
+        ? '<span class="badge badge-cancelled">' + openCount + '</span>' : '';
+
+      if (!reports.length) { el.innerHTML = '<div class="empty-state">No reports filed.</div>'; return; }
+
+      el.innerHTML = '';
+      reports.forEach(r => {
+        const proj = r.projects || {};
+        const reporter = r.reporter || {};
+        const reported = r.reported || {};
+        const card = document.createElement('div');
+        card.className = 'card';
+        if (r.status === 'open') card.style.cssText = 'background:#fef2f2;border-color:#fecaca';
+        card.innerHTML =
+          '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+          '<h3>' + escapeHtml(reporter.full_name || '?') + ' reported ' + escapeHtml(reported.full_name || '?') +
+          (reported.is_banned ? ' <span class="badge badge-cancelled">Suspended</span>' : '') + '</h3>' +
+          statusBadge(r.status) + '</div>' +
+          '<div class="item-meta">Reason: <strong>' + escapeHtml(r.reason) + '</strong> · Project: ' +
+          escapeHtml(proj.title || '(deleted)') + ' · ' + fmtDate(r.created_at) + '</div>' +
+          (r.details ? '<p style="margin-top:8px;font-size:14px">' + escapeHtml(r.details) + '</p>' : '') +
+          '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">' +
+          (r.status === 'open'
+            ? '<button class="btn btn-outline btn-sm" onclick="adminSetReportStatus(\'' + r.id + '\',\'dismissed\')">Dismiss</button>' +
+              '<button class="btn btn-outline btn-sm" onclick="adminSetReportStatus(\'' + r.id + '\',\'reviewed\')">Mark Reviewed</button>' +
+              (!reported.is_banned
+                ? '<button class="btn btn-danger btn-sm" onclick="adminSuspendFromReport(\'' + r.id + '\',\'' + r.reported_id + '\')">Suspend Reported User</button>'
+                : '')
+            : '') +
+          '</div>';
+        el.appendChild(card);
+      });
+    }
+
+    async function adminSetReportStatus(reportId, status) {
+      const { error } = await db.from('reports').update({ status: status }).eq('id', reportId);
+      if (error) { alert('Error: ' + error.message); return; }
+      loadReports();
+    }
+
+    async function adminSuspendFromReport(reportId, userId) {
+      if (!confirm('Suspend this user based on the report? They will be logged out and unable to use DevKonek.')) return;
+      const { error: e1 } = await db.from('profiles').update({ is_banned: true }).eq('id', userId);
+      if (e1) { alert('Error: ' + e1.message); return; }
+      const { error: e2 } = await db.from('reports').update({ status: 'reviewed' }).eq('id', reportId);
+      if (e2) { alert('Error: ' + e2.message); return; }
+      loadReports();
+      loadUsers();
+    }
+
     function showLogin(errorMsg) {
       document.getElementById('login-view').style.display = 'block';
       document.getElementById('dashboard-view').style.display = 'none';
@@ -221,7 +299,7 @@
       document.getElementById('dashboard-view').style.display = 'block';
       document.getElementById('logout-btn').style.display = 'inline-block';
       document.getElementById('welcome').textContent = 'Hi, ' + profile.full_name;
-      await Promise.all([loadStats(), loadProjects(), loadOffers(), loadUsers(), loadReviews()]);
+      await Promise.all([loadStats(), loadProjects(), loadOffers(), loadUsers(), loadReviews(), loadReports()]);
     }
 
     // Check current session on load — reuses it if already logged in as an admin.

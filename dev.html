@@ -129,11 +129,20 @@
         return;
       }
 
+      // Fetch ratings for every client posting a job — helps developers spot new/unrated clients.
+      const clientIds = new Set(filtered.map(j => j.client_id));
+      let clientRatings = new Map();
+      if (clientIds.size) {
+        const { data: clientReviews } = await db.from('reviews').select('reviewee_id, rating').in('reviewee_id', Array.from(clientIds));
+        clientRatings = aggregateRatings(clientReviews || []);
+      }
+
       listEl.innerHTML = '';
       const offeredProjectIds = new Set(myOffers.map(o => o.project_id));
 
       filtered.forEach(job => {
         const client = job.profiles || {};
+        const clientRating = clientRatings.get(job.client_id);
         const card = document.createElement('div');
         card.className = 'card';
 
@@ -156,7 +165,8 @@
           '<div class="price-tag">' + peso(job.budget_min) + ' - ' + peso(job.budget_max) + '</div></div>' +
           '<div class="item-meta">' + PROJECT_TYPES[job.project_type] + ' · ' + escapeHtml(job.category) +
           ' · ' + escapeHtml(job.timeline || '') +
-          ' · by ' + escapeHtml(client.business_name || client.full_name || 'Client') +
+          ' · by ' + escapeHtml(client.business_name || client.full_name || 'Client') + ' ' +
+          (clientRating ? renderStars(clientRating.avg, clientRating.count) : '<span style="color:var(--muted);font-size:12px">New client — no reviews yet, ask for a deposit before starting</span>') +
           ' · ' + fmtDate(job.created_at) + '</div>' +
           '<p style="margin:8px 0;font-size:14px">' + escapeHtml(job.details) + '</p>' +
           actionHtml;
@@ -213,6 +223,10 @@
             '<div class="contact-box"><strong>🎉 Accepted!</strong> Client: ' +
             escapeHtml(client.business_name || client.full_name || '') +
             '<br>Contact them here: <strong>' + escapeHtml(client.contact || '') + '</strong></div>';
+
+          if (proj.status !== 'cancelled') {
+            contactHtml += reportFormHtml('dev-' + o.project_id, o.project_id, proj.client_id, client.business_name || client.full_name || 'this client');
+          }
 
           if (proj.status === 'completed') {
             const existing = reviewsByProject.get(o.project_id);

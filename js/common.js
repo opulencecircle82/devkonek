@@ -15,6 +15,11 @@ async function requireAuth(requiredRole) {
     window.location.href = 'auth.html';
     return null;
   }
+  if (profile.is_banned) {
+    await db.auth.signOut();
+    window.location.href = 'auth.html?banned=1';
+    return null;
+  }
   if (requiredRole && profile.role !== requiredRole) {
     window.location.href = profile.role === 'client' ? 'client.html' : 'dev.html';
     return null;
@@ -138,3 +143,58 @@ const BUDGET_PRESETS = [
   { label: 'Mobile App (complex) — ₱80,000 to ₱300,000', min: 80000, max: 300000 },
   { label: 'Custom / I will type my own budget', min: 0, max: 0 }
 ];
+
+const REPORT_REASONS = [
+  'Did not pay after project completion',
+  'Unresponsive / disappeared mid-project',
+  'Scam / fake project or fake business',
+  'Delivered nothing / abandoned the work',
+  'Harassment or abusive behavior',
+  'Other'
+];
+
+// Builds a reusable "Report this user" form block (reason select + details + submit),
+// hidden by default under a toggle button. Call after inserting the returned HTML into the DOM
+// to attach the submit handler.
+function reportFormHtml(formId, projectId, reportedId, reportedName) {
+  const options = REPORT_REASONS.map(r => '<option value="' + escapeHtml(r) + '">' + escapeHtml(r) + '</option>').join('');
+  return (
+    '<div style="margin-top:8px">' +
+    '<button type="button" class="btn btn-outline btn-sm" onclick="toggleReportForm(\'' + formId + '\')">Report ' + escapeHtml(reportedName) + '</button>' +
+    '<div id="report-form-' + formId + '" style="display:none;margin-top:8px;padding:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px">' +
+    '<label style="margin-top:0">Reason</label>' +
+    '<select id="report-reason-' + formId + '">' + options + '</select>' +
+    '<label>Details (optional)</label>' +
+    '<textarea id="report-details-' + formId + '" placeholder="What happened?"></textarea>' +
+    '<button type="button" class="btn btn-danger btn-sm" style="margin-top:8px" ' +
+    'onclick="submitReport(\'' + projectId + '\',\'' + reportedId + '\',\'' + formId + '\')">Submit Report</button>' +
+    '<div class="error-msg" id="report-err-' + formId + '"></div>' +
+    '<div class="success-msg" id="report-ok-' + formId + '" style="display:none">Report submitted. Our admins will review it.</div>' +
+    '</div></div>'
+  );
+}
+
+function toggleReportForm(formId) {
+  const el = document.getElementById('report-form-' + formId);
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+async function submitReport(projectId, reportedId, formId) {
+  const errEl = document.getElementById('report-err-' + formId);
+  const okEl = document.getElementById('report-ok-' + formId);
+  errEl.textContent = '';
+  const reason = document.getElementById('report-reason-' + formId).value;
+  const details = document.getElementById('report-details-' + formId).value.trim();
+
+  const { data: { user } } = await db.auth.getUser();
+  const { error } = await db.from('reports').insert({
+    project_id: projectId,
+    reporter_id: user.id,
+    reported_id: reportedId,
+    reason: reason,
+    details: details
+  });
+  if (error) { errEl.textContent = error.message; return; }
+  document.getElementById('report-form-' + formId).querySelectorAll('select, textarea, button').forEach(el => el.disabled = true);
+  okEl.style.display = 'block';
+}

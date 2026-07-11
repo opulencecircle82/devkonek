@@ -186,6 +186,9 @@
           if (proj.status === 'in_progress') {
             offersHtml += '<button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="completeProject(\'' + proj.id + '\')">Mark as Completed</button>';
           }
+          if (proj.status !== 'cancelled') {
+            offersHtml += reportFormHtml('cli-' + proj.id, proj.id, accepted.developer_id, dev.full_name || 'this developer');
+          }
           if (proj.status === 'completed') {
             const existing = reviewsByProject.get(proj.id);
             if (existing) {
