@@ -12,12 +12,28 @@
       <span class="logo">Dev<span>Konek</span> <span style="font-size:12px;color:var(--muted);font-weight:400">Admin</span></span>
       <nav>
         <span id="welcome" style="font-size:14px;color:var(--muted)"></span>
-        <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
+        <button class="btn btn-outline btn-sm" id="logout-btn" style="display:none" onclick="logout()">Log Out</button>
       </nav>
     </div>
   </header>
 
-  <div class="container" style="padding-top:20px">
+  <!-- ADMIN LOGIN (shown when not logged in as an admin) -->
+  <div class="auth-wrap" id="login-view" style="display:none">
+    <div class="card">
+      <h2 style="margin-bottom:16px">Admin Login</h2>
+      <form id="admin-login-form">
+        <label style="margin-top:0">Email</label>
+        <input type="email" id="admin-email" required autocomplete="off">
+        <label>Password</label>
+        <input type="password" id="admin-password" required autocomplete="off">
+        <div class="error-msg" id="admin-login-error"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:10px">Log In</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD (shown after successful admin login) -->
+  <div class="container" id="dashboard-view" style="padding-top:20px;display:none">
     <div class="stat-grid">
       <div class="stat-card"><div class="stat-value" id="stat-users">-</div><div class="stat-label">Total Users</div></div>
       <div class="stat-card"><div class="stat-value" id="stat-clients">-</div><div class="stat-label">Business Owners</div></div>
@@ -164,12 +180,61 @@
       });
     }
 
-    (async () => {
-      me = await requireAdmin();
-      if (!me) return;
-      document.getElementById('welcome').textContent = 'Hi, ' + me.profile.full_name;
+    function showLogin(errorMsg) {
+      document.getElementById('login-view').style.display = 'block';
+      document.getElementById('dashboard-view').style.display = 'none';
+      document.getElementById('logout-btn').style.display = 'none';
+      document.getElementById('welcome').textContent = '';
+      if (errorMsg) document.getElementById('admin-login-error').textContent = errorMsg;
+    }
+
+    async function showDashboard(profile) {
+      document.getElementById('login-view').style.display = 'none';
+      document.getElementById('dashboard-view').style.display = 'block';
+      document.getElementById('logout-btn').style.display = 'inline-block';
+      document.getElementById('welcome').textContent = 'Hi, ' + profile.full_name;
       await Promise.all([loadStats(), loadProjects(), loadOffers(), loadUsers()]);
-    })();
+    }
+
+    // Check current session on load — reuses it if already logged in as an admin.
+    async function checkSession() {
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) { showLogin(); return; }
+
+      const { data: profile, error } = await db.from('profiles').select('*').eq('id', user.id).single();
+      if (error || !profile || !profile.is_admin) {
+        await db.auth.signOut();
+        showLogin('This account does not have admin access.');
+        return;
+      }
+      me = { user, profile };
+      showDashboard(profile);
+    }
+
+    document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('admin-login-error');
+      errEl.textContent = '';
+
+      const { data, error } = await db.auth.signInWithPassword({
+        email: document.getElementById('admin-email').value.trim(),
+        password: document.getElementById('admin-password').value
+      });
+      if (error) { errEl.textContent = error.message; return; }
+
+      const { data: profile, error: pErr } = await db
+        .from('profiles').select('*').eq('id', data.user.id).single();
+      if (pErr || !profile || !profile.is_admin) {
+        await db.auth.signOut();
+        errEl.textContent = 'This account does not have admin access.';
+        return;
+      }
+
+      me = { user: data.user, profile };
+      showDashboard(profile);
+    });
+
+    checkSession();
   </script>
 </body>
 </html>
