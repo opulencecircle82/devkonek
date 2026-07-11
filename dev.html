@@ -134,7 +134,7 @@
       const typeFilter = document.getElementById('job-type-filter').value;
 
       let query = db.from('projects')
-        .select('*, profiles:client_id(full_name, business_name)')
+        .select('*')
         .eq('status', 'open')
         .order('created_at', { ascending: false });
       if (typeFilter) query = query.eq('project_type', typeFilter);
@@ -153,11 +153,18 @@
         return;
       }
 
-      // Fetch ratings for every client posting a job — helps developers spot new/unrated clients.
+      // Client names/business names come from public_profiles (safe columns only —
+      // no contact/payment info) since the developer hasn't offered yet, i.e. no
+      // relationship exists that would unlock the full profiles row under RLS.
       const clientIds = new Set(filtered.map(j => j.client_id));
+      let clientProfiles = new Map();
       let clientRatings = new Map();
       if (clientIds.size) {
-        const { data: clientReviews } = await db.from('reviews').select('reviewee_id, rating').in('reviewee_id', Array.from(clientIds));
+        const [{ data: clientProfileRows }, { data: clientReviews }] = await Promise.all([
+          db.from('public_profiles').select('id, full_name, business_name').in('id', Array.from(clientIds)),
+          db.from('reviews').select('reviewee_id, rating').in('reviewee_id', Array.from(clientIds))
+        ]);
+        clientProfiles = new Map((clientProfileRows || []).map(p => [p.id, p]));
         clientRatings = aggregateRatings(clientReviews || []);
       }
 
@@ -165,7 +172,7 @@
       const offeredProjectIds = new Set(myOffers.map(o => o.project_id));
 
       filtered.forEach(job => {
-        const client = job.profiles || {};
+        const client = clientProfiles.get(job.client_id) || {};
         const clientRating = clientRatings.get(job.client_id);
         const card = document.createElement('div');
         card.className = 'card';
